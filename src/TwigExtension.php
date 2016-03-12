@@ -8,12 +8,11 @@
 namespace Drupal\twig_tweak;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\block\Entity\Block;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Utility\Token;
 
 /**
- * A class providing Twig extension with some useful functions and filters.
+ * Twig extension with some useful functions and filters.
  */
 class TwigExtension extends \Twig_Extension {
 
@@ -49,9 +48,6 @@ class TwigExtension extends \Twig_Extension {
    *   The configuration factory.
    */
   public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory) {
-    $this->blockBuilder = \Drupal::entityTypeManager()
-      ->getViewBuilder('block');
-
     $this->entityTypeManager = $entity_type_manager;
     $this->token = $token;
     $this->configFactory = $config_factory;
@@ -90,6 +86,15 @@ class TwigExtension extends \Twig_Extension {
 
   /**
    * Embeds a view.
+   *
+   * @param string $name
+   *   The name of the view to embed.
+   * @param string $display_id
+   *   The display id to embed.
+   *
+   * @return array|null
+   *   A renderable array containing the view output or NULL if the display ID
+   *   of the view to be executed doesn't exist.
    */
   public function drupalView($name, $display_id = 'default') {
     $args = func_get_args();
@@ -104,14 +109,27 @@ class TwigExtension extends \Twig_Extension {
 
   /**
    * Builds the render array for the provided block.
+   *
+   * @param mixed $id
+   *   The ID of the block to render.
+   *
+   * @return NULL|array
+   *   A render array for the block or NULL if the block does not exist.
    */
   public function drupalBlock($id) {
-    $block = Block::load($id);
-    return $this->entityTypeManager->getViewBuilder('block')->view($block);
+    $block = $this->entityTypeManager->getStorage('block')->load($id);
+    return $block ?
+      $this->entityTypeManager->getViewBuilder('block')->view($block) : '';
   }
 
   /**
    * Replaces a given tokens with appropriate value.
+   *
+   * @param string $token
+   *   A replaceable token.
+   *
+   * @return string
+   *   The token value.
    */
   public function drupalToken($token) {
     return $this->token->replace("[$token]");
@@ -119,15 +137,39 @@ class TwigExtension extends \Twig_Extension {
 
   /**
    * Returns the render array for an entity.
+   *
+   * @param string $entity_type
+   *   The entity type.
+   * @param mixed $id
+   *   The ID of the entity to render.
+   * @param string $view_mode
+   *   (optional) The view mode that should be used to render the entity.
+   * @param string $langcode
+   *   (optional) For which language the entity should be rendered, defaults to
+   *   the current content language.
+   *
+   * @return NULL|array
+   *   A render array for the entity or NULL if the entity does not exist.
    */
   public function drupalEntity($entity_type, $id, $view_mode = NULL, $langcode = NULL) {
     $entity = $this->entityTypeManager->getStorage($entity_type)->load($id);
-    $render_controller = $this->entityTypeManager->getViewBuilder($entity->getEntityTypeId());
-    return $render_controller->view($entity, $view_mode, $langcode);
+    if ($entity) {
+      $render_controller = $this->entityTypeManager->getViewBuilder($entity_type);
+      return $render_controller->view($entity, $view_mode, $langcode);
+    }
+    return NULL;
   }
 
   /**
    * Gets data from this configuration.
+   *
+   * @param string $name
+   *   The name of the configuration object to construct.
+   * @param string $key
+   *   A string that maps to a key within the configuration data.
+   *
+   * @return mixed
+   *   The data that was requested.
    */
   public function drupalConfig($name, $key) {
     return $this->configFactory->get($name)->get($key);
@@ -135,6 +177,12 @@ class TwigExtension extends \Twig_Extension {
 
   /**
    * Evaluates a string of PHP code.
+   *
+   * @param string $code
+   *   Valid PHP code to be evaluated.
+   *
+   * @return mixed
+   *   The eval() result.
    */
   public function phpFilter($code) {
     ob_start();
@@ -146,6 +194,12 @@ class TwigExtension extends \Twig_Extension {
 
   /**
    * Replaces all tokens in a given string with appropriate values.
+   *
+   * @param string $text
+   *   An HTML string containing replaceable tokens.
+   *
+   * @return string
+   *   The entered HTML text with tokens replaced.
    */
   public function tokenReplaceFilter($text) {
     return $this->token->replace($text);
@@ -153,6 +207,16 @@ class TwigExtension extends \Twig_Extension {
 
   /**
    * Performs a regular expression search and replace.
+   *
+   * @param string $text
+   *   The text to search and replace.
+   * @param string $pattern
+   *   The pattern to search for.
+   * @param string $replacement
+   *   The string to replace.
+   *
+   * @return string
+   *   The new text if matches are found, otherwise unchanged text.
    */
   public function pregPeplaceFilter($text, $pattern, $replacement) {
     return preg_replace('/' . preg_quote($pattern, '/') . '/', $replacement, $text);
