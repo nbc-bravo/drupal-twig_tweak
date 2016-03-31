@@ -9,6 +9,7 @@ namespace Drupal\twig_tweak;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Utility\Token;
 
 /**
@@ -38,6 +39,13 @@ class TwigExtension extends \Twig_Extension {
   protected $configFactory;
 
   /**
+   * The route match.
+   *
+   * @var \Drupal\Core\Routing\RouteMatchInterface
+   */
+  protected $routeMatch;
+
+  /**
    * TwigExtension constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -46,11 +54,14 @@ class TwigExtension extends \Twig_Extension {
    *   The token service.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The configuration factory.
+   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
+   *   The route match.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match) {
     $this->entityTypeManager = $entity_type_manager;
     $this->token = $token;
     $this->configFactory = $config_factory;
+    $this->routeMatch = $route_match;
   }
 
   /**
@@ -151,8 +162,10 @@ class TwigExtension extends \Twig_Extension {
    * @return NULL|array
    *   A render array for the entity or NULL if the entity does not exist.
    */
-  public function drupalEntity($entity_type, $id, $view_mode = NULL, $langcode = NULL) {
-    $entity = $this->entityTypeManager->getStorage($entity_type)->load($id);
+  public function drupalEntity($entity_type, $id = NULL, $view_mode = NULL, $langcode = NULL) {
+    $entity = $id ?
+      $this->entityTypeManager->getStorage($entity_type)->load($id) :
+      $this->routeMatch->getParameter($entity_type);
     if ($entity) {
       $render_controller = $this->entityTypeManager->getViewBuilder($entity_type);
       return $render_controller->view($entity, $view_mode, $langcode);
