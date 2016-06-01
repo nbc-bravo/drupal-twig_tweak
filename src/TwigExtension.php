@@ -1,10 +1,5 @@
 <?php
 
-/**
- * @file
- * Contains Drupal\twig_tweak\TwigExtension.
- */
-
 namespace Drupal\twig_tweak;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
@@ -69,11 +64,11 @@ class TwigExtension extends \Twig_Extension {
    */
   public function getFunctions() {
     return [
-      new \Twig_SimpleFunction('drupal_view', [$this, 'drupalView']),
+      new \Twig_SimpleFunction('drupal_view', 'views_embed_view'),
       new \Twig_SimpleFunction('drupal_block', [$this, 'drupalBlock']),
       new \Twig_SimpleFunction('drupal_token', [$this, 'drupalToken']),
       new \Twig_SimpleFunction('drupal_entity', [$this, 'drupalEntity']),
-      new \Twig_SimpleFunction('drupal_config', [$this, 'drupalConfig'])
+      new \Twig_SimpleFunction('drupal_config', [$this, 'drupalConfig']),
     ];
   }
 
@@ -93,29 +88,6 @@ class TwigExtension extends \Twig_Extension {
    */
   public function getName() {
     return 'twig_tweak';
-  }
-
-  /**
-   * Embeds a view.
-   *
-   * @param string $name
-   *   The name of the view to embed.
-   * @param string $display_id
-   *   The display id to embed.
-   *
-   * @return array|null
-   *   A renderable array containing the view output or NULL if the display ID
-   *   of the view to be executed doesn't exist.
-   */
-  public function drupalView($name, $display_id = 'default') {
-    $args = func_get_args();
-    return views_embed_view(
-      $name,
-      $display_id,
-      isset($args[2]) ? $args[2] : NULL,
-      isset($args[3]) ? $args[3] : NULL,
-      isset($args[4]) ? $args[2] : NULL
-    );
   }
 
   /**
