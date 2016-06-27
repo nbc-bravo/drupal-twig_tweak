@@ -5,6 +5,7 @@ namespace Drupal\twig_tweak;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
+use Drupal\Core\Site\Settings;
 use Drupal\Core\Utility\Token;
 
 /**
@@ -76,11 +77,15 @@ class TwigExtension extends \Twig_Extension {
    * {@inheritdoc}
    */
   public function getFilters() {
-    return [
-      new \Twig_SimpleFilter('php', [$this, 'phpFilter']),
+    $filters = [
       new \Twig_SimpleFilter('token_replace', [$this, 'tokenReplaceFilter']),
       new \Twig_SimpleFilter('preg_replace', [$this, 'pregPeplaceFilter']),
     ];
+    // PHP filter should be enabled in settings.php file.
+    if (Settings::get('twig_tweak_enable_php_filter')) {
+      $filters[] = new \Twig_SimpleFilter('php', [$this, 'phpFilter']);
+    }
+    return $filters;
   }
 
   /**
