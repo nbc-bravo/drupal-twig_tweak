@@ -69,6 +69,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_block', [$this, 'drupalBlock']),
       new \Twig_SimpleFunction('drupal_token', [$this, 'drupalToken']),
       new \Twig_SimpleFunction('drupal_entity', [$this, 'drupalEntity']),
+      new \Twig_SimpleFunction('drupal_field', [$this, 'drupalField']),
       new \Twig_SimpleFunction('drupal_config', [$this, 'drupalConfig']),
     ];
   }
@@ -101,7 +102,7 @@ class TwigExtension extends \Twig_Extension {
    * @param mixed $id
    *   The ID of the block to render.
    *
-   * @return NULL|array
+   * @return null|array
    *   A render array for the block or NULL if the block does not exist.
    */
   public function drupalBlock($id) {
@@ -136,7 +137,7 @@ class TwigExtension extends \Twig_Extension {
    *   (optional) For which language the entity should be rendered, defaults to
    *   the current content language.
    *
-   * @return NULL|array
+   * @return null|array
    *   A render array for the entity or NULL if the entity does not exist.
    */
   public function drupalEntity($entity_type, $id = NULL, $view_mode = NULL, $langcode = NULL) {
@@ -146,6 +147,31 @@ class TwigExtension extends \Twig_Extension {
     if ($entity) {
       $render_controller = $this->entityTypeManager->getViewBuilder($entity_type);
       return $render_controller->view($entity, $view_mode, $langcode);
+    }
+    return NULL;
+  }
+
+  /**
+   * Returns the render array for a single entity field.
+   *
+   * @param string $field_name
+   *   The field name.
+   * @param string $entity_type
+   *   The entity type.
+   * @param mixed $id
+   *   The ID of the entity to render.
+   * @param string $view_mode
+   *   (optional) The view mode that should be used to render the entity.
+   *
+   * @return null|array
+   *   A render array for the field or NULL if the value does not exist.
+   */
+  public function drupalField($field_name, $entity_type, $id = NULL, $view_mode = 'default') {
+    $entity = $id ?
+      $this->entityTypeManager->getStorage($entity_type)->load($id) :
+      $this->routeMatch->getParameter($entity_type);
+    if (isset($entity->{$field_name})) {
+      return $entity->{$field_name}->view($view_mode);
     }
     return NULL;
   }
