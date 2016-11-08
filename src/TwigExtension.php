@@ -81,7 +81,7 @@ class TwigExtension extends \Twig_Extension {
   public function getFilters() {
     $filters = [
       new \Twig_SimpleFilter('token_replace', [$this, 'tokenReplaceFilter']),
-      new \Twig_SimpleFilter('preg_replace', [$this, 'pregPeplaceFilter']),
+      new \Twig_SimpleFilter('preg_replace', [$this, 'pregReplaceFilter']),
       new \Twig_SimpleFilter('image_style', [$this, 'imageStyle']),
     ];
     // PHP filter should be enabled in settings.php file.
@@ -236,7 +236,7 @@ class TwigExtension extends \Twig_Extension {
    * @return string
    *   The new text if matches are found, otherwise unchanged text.
    */
-  public function pregPeplaceFilter($text, $pattern, $replacement) {
+  public function pregReplaceFilter($text, $pattern, $replacement) {
     return preg_replace('/' . preg_quote($pattern, '/') . '/', $replacement, $text);
   }
 
