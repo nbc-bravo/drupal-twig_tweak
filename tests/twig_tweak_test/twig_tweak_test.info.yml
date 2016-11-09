@@ -1,0 +1,8 @@
+name: Twig tweak test
+type: module
+description: Support module for Tweak twig testing.
+package: Testing
+core: 8.x
+dependencies:
+  - twig_tweak
+  - node

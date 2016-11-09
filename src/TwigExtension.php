@@ -237,7 +237,7 @@ class TwigExtension extends \Twig_Extension {
    *   The new text if matches are found, otherwise unchanged text.
    */
   public function pregReplaceFilter($text, $pattern, $replacement) {
-    return preg_replace('/' . preg_quote($pattern, '/') . '/', $replacement, $text);
+    return preg_replace("/$pattern/", $replacement, $text);
   }
 
   /**
