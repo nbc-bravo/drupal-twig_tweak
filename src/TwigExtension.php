@@ -4,6 +4,8 @@ namespace Drupal\twig_tweak;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Menu\MenuActiveTrailInterface;
+use Drupal\Core\Menu\MenuLinkTreeInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Utility\Token;
@@ -43,6 +45,20 @@ class TwigExtension extends \Twig_Extension {
   protected $routeMatch;
 
   /**
+   * The menu link tree service.
+   *
+   * @var \Drupal\Core\Menu\MenuLinkTreeInterface
+   */
+  protected $menuTree;
+
+  /**
+   * The active menu trail service.
+   *
+   * @var \Drupal\Core\Menu\MenuActiveTrailInterface
+   */
+  protected $menuActiveTrail;
+
+  /**
    * TwigExtension constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -53,12 +69,18 @@ class TwigExtension extends \Twig_Extension {
    *   The configuration factory.
    * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
    *   The route match.
+   * @param \Drupal\Core\Menu\MenuLinkTreeInterface $menu_tree
+   *   The menu tree service.
+   * @param \Drupal\Core\Menu\MenuActiveTrailInterface $menu_active_trail
+   *   The active menu trail service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match, MenuLinkTreeInterface $menu_tree, MenuActiveTrailInterface $menu_active_trail) {
     $this->entityTypeManager = $entity_type_manager;
     $this->token = $token;
     $this->configFactory = $config_factory;
     $this->routeMatch = $route_match;
+    $this->menuTree = $menu_tree;
+    $this->menuActiveTrail = $menu_active_trail;
   }
 
   /**
@@ -71,6 +93,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_token', [$this, 'drupalToken']),
       new \Twig_SimpleFunction('drupal_entity', [$this, 'drupalEntity']),
       new \Twig_SimpleFunction('drupal_field', [$this, 'drupalField']),
+      new \Twig_SimpleFunction('drupal_menu', [$this, 'drupalMenu']),
       new \Twig_SimpleFunction('drupal_config', [$this, 'drupalConfig']),
     ];
   }
@@ -176,6 +199,41 @@ class TwigExtension extends \Twig_Extension {
       return $entity->{$field_name}->view($view_mode);
     }
     return NULL;
+  }
+
+  /**
+   * Returns the render array for Drupal menu.
+   *
+   * @param string $menu_name
+   *   The name of the menu.
+   * @param int $level
+   *   (optional) Initial menu level.
+   * @param int $depth
+   *   (optional) Maximum number of menu levels to display.
+   *
+   * @return array
+   *   A render array for the menu.
+   */
+  public function drupalMenu($menu_name, $level = 1, $depth = 0) {
+    $parameters = $this->menuTree->getCurrentRouteMenuTreeParameters($menu_name);
+
+    // Adjust the menu tree parameters based on the block's configuration.
+    $parameters->setMinDepth($level);
+    // When the depth is configured to zero, there is no depth limit. When depth
+    // is non-zero, it indicates the number of levels that must be displayed.
+    // Hence this is a relative depth that we must convert to an actual
+    // (absolute) depth, that may never exceed the maximum depth.
+    if ($depth > 0) {
+      $parameters->setMaxDepth(min($level + $depth - 1, $this->menuTree->maxDepth()));
+    }
+
+    $tree = $this->menuTree->load($menu_name, $parameters);
+    $manipulators = [
+      ['callable' => 'menu.default_tree_manipulators:checkAccess'],
+      ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
+    ];
+    $tree = $this->menuTree->transform($tree, $manipulators);
+    return $this->menuTree->build($tree);
   }
 
   /**

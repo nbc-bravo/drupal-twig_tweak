@@ -6,6 +6,9 @@
   <div class="tt-entity-teaser">{{ drupal_entity('node', 1, 'teaser') }}</div>
   <div class="tt-entity-from-url">{{ drupal_entity('node') }}</div>
   <div class="tt-field">{{ drupal_field('body', 'node', 1) }}</div>
+  <div class="tt-menu-default">{{ drupal_menu('twig-tweak-test') }}</div>
+  <div class="tt-menu-level">{{ drupal_menu('twig-tweak-test', 2) }}</div>
+  <div class="tt-menu-depth">{{ drupal_menu('twig-tweak-test', 1, 1) }}</div>
   <div class="tt-block">{{ drupal_block('powered_by_drupal') }}</div>
   <div class="tt-token">{{ drupal_token('site:name') }}</div>
   <div class="tt-config">{{ drupal_config('user.settings', 'anonymous') }}</div>
