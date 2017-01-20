@@ -141,12 +141,23 @@ class TwigExtension extends \Twig_Extension {
    *
    * @param string $token
    *   A replaceable token.
+   * @param array $data
+   *   (optional) An array of keyed objects. For simple replacement scenarios
+   *   'node', 'user', and others are common keys, with an accompanying node or
+   *   user object being the value. Some token types, like 'site', do not
+   *   require any explicit information from $data and can be replaced even if
+   *   it is empty.
+   * @param array $options
+   *   (optional) A keyed array of settings and flags to control the token
+   *   replacement process.
    *
    * @return string
    *   The token value.
+   *
+   * @see \Drupal\Core\Utility\Token::replace()
    */
-  public function drupalToken($token) {
-    return $this->token->replace("[$token]");
+  public function drupalToken($token, array $data = [], array $options = []) {
+    return $this->token->replace("[$token]", $data, $options);
   }
 
   /**

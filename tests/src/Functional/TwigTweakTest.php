@@ -109,6 +109,10 @@ class TwigTweakTest extends BrowserTestBase {
     $xpath = '//div[@class = "tt-token" and . = "Drupal"]';
     $this->assertByXpath($xpath);
 
+    // Test token with context.
+    $xpath = '//div[@class = "tt-token-data" and . = "Beta"]';
+    $this->assertByXpath($xpath);
+
     // Test config.
     $xpath = '//div[@class = "tt-config" and . = "Anonymous"]';
     $this->assertByXpath($xpath);
