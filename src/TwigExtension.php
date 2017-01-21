@@ -278,7 +278,9 @@ class TwigExtension extends \Twig_Extension {
    */
   public function phpFilter($code) {
     ob_start();
+    // @codingStandardsIgnoreStart
     print eval($code);
+    // @codingStandardsIgnoreEnd
     $output = ob_get_contents();
     ob_end_clean();
     return $output;
