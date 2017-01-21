@@ -197,9 +197,9 @@ class TwigExtension extends \Twig_Extension {
    * @param mixed $id
    *   The ID of the entity to render.
    * @param string $view_mode
-   *   (optional) The view mode that should be used to render the entity.
+   *   (optional) The view mode that should be used to render the field.
    * @param string $langcode
-   *   (optional) The langcode that should be used to render the entity.
+   *   (optional) Language code to load translation.
    *
    * @return null|array
    *   A render array for the field or NULL if the value does not exist.
