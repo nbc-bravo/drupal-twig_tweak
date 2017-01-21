@@ -198,14 +198,19 @@ class TwigExtension extends \Twig_Extension {
    *   The ID of the entity to render.
    * @param string $view_mode
    *   (optional) The view mode that should be used to render the entity.
+   * @param string $langcode
+   *   (optional) The langcode that should be used to render the entity.
    *
    * @return null|array
    *   A render array for the field or NULL if the value does not exist.
    */
-  public function drupalField($field_name, $entity_type, $id = NULL, $view_mode = 'default') {
+  public function drupalField($field_name, $entity_type, $id = NULL, $view_mode = 'default', $langcode = NULL) {
     $entity = $id ?
       $this->entityTypeManager->getStorage($entity_type)->load($id) :
       $this->routeMatch->getParameter($entity_type);
+    if ($langcode && $entity->hasTranslation($langcode)) {
+      $entity = $entity->getTranslation($langcode);
+    }
     if (isset($entity->{$field_name})) {
       return $entity->{$field_name}->view($view_mode);
     }
