@@ -4,7 +4,6 @@ namespace Drupal\twig_tweak;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Menu\MenuActiveTrailInterface;
 use Drupal\Core\Menu\MenuLinkTreeInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Site\Settings;
@@ -52,13 +51,6 @@ class TwigExtension extends \Twig_Extension {
   protected $menuTree;
 
   /**
-   * The active menu trail service.
-   *
-   * @var \Drupal\Core\Menu\MenuActiveTrailInterface
-   */
-  protected $menuActiveTrail;
-
-  /**
    * TwigExtension constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -71,16 +63,13 @@ class TwigExtension extends \Twig_Extension {
    *   The route match.
    * @param \Drupal\Core\Menu\MenuLinkTreeInterface $menu_tree
    *   The menu tree service.
-   * @param \Drupal\Core\Menu\MenuActiveTrailInterface $menu_active_trail
-   *   The active menu trail service.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match, MenuLinkTreeInterface $menu_tree, MenuActiveTrailInterface $menu_active_trail) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match, MenuLinkTreeInterface $menu_tree) {
     $this->entityTypeManager = $entity_type_manager;
     $this->token = $token;
     $this->configFactory = $config_factory;
     $this->routeMatch = $route_match;
     $this->menuTree = $menu_tree;
-    $this->menuActiveTrail = $menu_active_trail;
   }
 
   /**
