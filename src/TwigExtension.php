@@ -351,6 +351,8 @@ class TwigExtension extends \Twig_Extension {
    */
   public function drupalSetMessage($message = NULL, $type = 'status', $repeat = FALSE) {
     drupal_set_message($message, $type, $repeat);
+    $build['#cache']['max-age'] = 0;
+    return $build;
   }
 
 }
