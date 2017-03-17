@@ -117,6 +117,10 @@ class TwigTweakTest extends BrowserTestBase {
     $xpath = '//div[@class = "tt-config" and . = "Anonymous"]';
     $this->assertByXpath($xpath);
 
+    // Test status message.
+    $xpath = '//div[@class = "messages messages--warning" and contains(., "Hi!")]';
+    $this->assertByXpath($xpath);
+
     // Test token replacement.
     $xpath = '//div[@class = "tt-token-replace" and . = "Site name: Drupal"]';
     $this->assertByXpath($xpath);

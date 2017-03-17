@@ -95,6 +95,9 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_field', [$this, 'drupalField']),
       new \Twig_SimpleFunction('drupal_menu', [$this, 'drupalMenu']),
       new \Twig_SimpleFunction('drupal_config', [$this, 'drupalConfig']),
+      // Wrap drupal_set_message() because it returns some value which is not
+      // suitable for Twig template.
+      new \Twig_SimpleFunction('drupal_set_message', [$this, 'drupalSetMessage']),
     ];
   }
 
@@ -331,6 +334,23 @@ class TwigExtension extends \Twig_Extension {
   public function imageStyle($path, $style) {
     $url = ImageStyle::load($style)->buildUrl($path);
     return file_url_transform_relative($url);
+  }
+
+  /**
+   * Sets a message to display to the user.
+   *
+   * @param string|\Drupal\Component\Render\MarkupInterface $message
+   *   (optional) The translated message to be displayed to the user.
+   * @param string $type
+   *   (optional) The message's type. Defaults to 'status'.
+   * @param bool $repeat
+   *   (optional) If this is FALSE and the message is already set, then the
+   *   message won't be repeated. Defaults to FALSE.
+   *
+   * @see drupal_set_message()
+   */
+  public function drupalSetMessage($message = NULL, $type = 'status', $repeat = FALSE) {
+    drupal_set_message($message, $type, $repeat);
   }
 
 }
