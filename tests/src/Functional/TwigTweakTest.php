@@ -77,7 +77,6 @@ class TwigTweakTest extends BrowserTestBase {
     // Test loading entity from url.
     $xpath = '//div[@class = "tt-entity-from-url" and . = ""]';
     $this->assertByXpath($xpath);
-
     $this->drupalGet('/node/2');
     $xpath = '//div[@class = "tt-entity-from-url"]';
     $xpath .= '/article[contains(@class, "node")]';
@@ -98,6 +97,13 @@ class TwigTweakTest extends BrowserTestBase {
 
     // Test menu (depth).
     $xpath = '//div[@class = "tt-menu-depth"]/ul[@class = "menu"]/li[not(ul)]/a[. = "Link 1"]';
+    $this->assertByXpath($xpath);
+
+    // Test region.
+    $xpath = '//div[@class = "tt-region"]';
+    $xpath .= '/div[contains(@class, "block-page-title-block") and h1[@class="page-title" and . = "Beta"]]';
+    $xpath .= '/following-sibling::div[@class="messages messages--warning" and contains(., "Hi!")]';
+    $xpath .= '/following-sibling::div[contains(@class, "block-system-powered-by-block")]/span[. = "Powered by Drupal"]';
     $this->assertByXpath($xpath);
 
     // Test block.
@@ -139,6 +145,15 @@ class TwigTweakTest extends BrowserTestBase {
    */
   public function assertByXpath($xpath) {
     $this->assertSession()->elementExists('xpath', $xpath);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function drupalGet($path, array $options = [], array $headers = []) {
+    // Title block rendered through drupal_region() is cached by some reason.
+    \Drupal::service('cache_tags.invalidator')->invalidateTags(['block_view']);
+    return parent::drupalGet($path, $options, $headers);
   }
 
 }

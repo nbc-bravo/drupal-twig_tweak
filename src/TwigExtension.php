@@ -2,13 +2,17 @@
 
 namespace Drupal\twig_tweak;
 
+use Drupal\Core\Block\TitleBlockPluginInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Controller\TitleResolverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Menu\MenuLinkTreeInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Utility\Token;
 use Drupal\image\Entity\ImageStyle;
+use Symfony\Cmf\Component\Routing\RouteObjectInterface;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Twig extension with some useful functions and filters.
@@ -51,6 +55,20 @@ class TwigExtension extends \Twig_Extension {
   protected $menuTree;
 
   /**
+   * The request stack.
+   *
+   * @var \Symfony\Component\HttpFoundation\RequestStack
+   */
+  protected $requestStack;
+
+  /**
+   * The title resolver.
+   *
+   * @var \Drupal\Core\Controller\TitleResolverInterface
+   */
+  protected $titleResolver;
+
+  /**
    * TwigExtension constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -63,13 +81,19 @@ class TwigExtension extends \Twig_Extension {
    *   The route match.
    * @param \Drupal\Core\Menu\MenuLinkTreeInterface $menu_tree
    *   The menu tree service.
+   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
+   *   The request stack.
+   * @param \Drupal\Core\Controller\TitleResolverInterface $title_resolver
+   *   The title resolver.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match, MenuLinkTreeInterface $menu_tree) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match, MenuLinkTreeInterface $menu_tree, RequestStack $request_stack, TitleResolverInterface $title_resolver) {
     $this->entityTypeManager = $entity_type_manager;
     $this->token = $token;
     $this->configFactory = $config_factory;
     $this->routeMatch = $route_match;
     $this->menuTree = $menu_tree;
+    $this->requestStack = $request_stack;
+    $this->titleResolver = $title_resolver;
   }
 
   /**
@@ -79,6 +103,7 @@ class TwigExtension extends \Twig_Extension {
     return [
       new \Twig_SimpleFunction('drupal_view', 'views_embed_view'),
       new \Twig_SimpleFunction('drupal_block', [$this, 'drupalBlock']),
+      new \Twig_SimpleFunction('drupal_region', [$this, 'drupalRegion']),
       new \Twig_SimpleFunction('drupal_token', [$this, 'drupalToken']),
       new \Twig_SimpleFunction('drupal_entity', [$this, 'drupalEntity']),
       new \Twig_SimpleFunction('drupal_field', [$this, 'drupalField']),
@@ -111,6 +136,42 @@ class TwigExtension extends \Twig_Extension {
    */
   public function getName() {
     return 'twig_tweak';
+  }
+
+  /**
+   * Builds the render array of a given region.
+   *
+   * @param string $region
+   *   The region to build.
+   * @param string $theme
+   *   (Optional) The name of the theme to load the region. If it is not
+   *    provided default site theme will be used.
+   *
+   * @return array
+   *   A render array to display the region content.
+   */
+  public function drupalRegion($region, $theme = NULL) {
+    $blocks = $this->entityTypeManager->getStorage('block')->loadByProperties([
+      'region' => $region,
+      'theme'  => $theme ?: $this->configFactory->get('system.theme')->get('default'),
+    ]);
+
+    $view_builder = $this->entityTypeManager->getViewBuilder('block');
+
+    $build = [];
+    /* @var $blocks \Drupal\block\BlockInterface[] */
+    foreach ($blocks as $id => $block) {
+      $block_plugin = $block->getPlugin();
+      if ($block_plugin instanceof TitleBlockPluginInterface) {
+        $request = $this->requestStack->getCurrentRequest();
+        if ($route = $request->attributes->get(RouteObjectInterface::ROUTE_OBJECT)) {
+          $block_plugin->setTitle($this->titleResolver->getTitle($request, $route));
+        }
+      }
+      $build[$id] = $view_builder->view($block);
+    }
+
+    return $build;
   }
 
   /**
