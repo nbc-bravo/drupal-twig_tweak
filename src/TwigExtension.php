@@ -145,7 +145,7 @@ class TwigExtension extends \Twig_Extension {
    *   The region to build.
    * @param string $theme
    *   (Optional) The name of the theme to load the region. If it is not
-   *    provided default site theme will be used.
+   *   provided then default theme will be used.
    *
    * @return array
    *   A render array to display the region content.
@@ -395,7 +395,10 @@ class TwigExtension extends \Twig_Extension {
    *   (optional) The message's type. Defaults to 'status'.
    * @param bool $repeat
    *   (optional) If this is FALSE and the message is already set, then the
-   *   message won't be repeated. Defaults to FALSE.
+   *   message will not be repeated. Defaults to FALSE.
+   *
+   * @return array
+   *   A render array to disable caching.
    *
    * @see drupal_set_message()
    */

@@ -1,5 +1,4 @@
 name: Twig tweak
 type: module
-description: Provides some extra twig functions.
-package: custom
+description: Provides some extra Twig functions and filters.
 core: 8.x

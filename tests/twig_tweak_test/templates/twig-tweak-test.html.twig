@@ -1,4 +1,21 @@
-<div class="tt-test" style="background-color: lavender">
+<style>
+  .tt-test > div {
+    margin: 15px;
+    padding: 10px;
+    outline: solid 2px dodgerblue;
+  }
+  .tt-test > div::before {
+    content: attr(class);
+    font-weight: bold;
+    display: block;
+    font-style: italic;
+    border-bottom: solid 1px dodgerblue;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    color: dodgerblue;
+  }
+</style>
+<div class="tt-test">
   <div class="tt-view-default">{{ drupal_view('twig_tweak_test') }}</div>
   <div class="tt-view-page_1">{{ drupal_view('twig_tweak_test', 'page_1') }}</div>
   <div class="tt-view-page_1-with-argument">{{ drupal_view('twig_tweak_test', 'page_1', 1) }}</div>
