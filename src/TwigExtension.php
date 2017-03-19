@@ -104,10 +104,11 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_view', 'views_embed_view'),
       new \Twig_SimpleFunction('drupal_block', [$this, 'drupalBlock']),
       new \Twig_SimpleFunction('drupal_region', [$this, 'drupalRegion']),
-      new \Twig_SimpleFunction('drupal_token', [$this, 'drupalToken']),
       new \Twig_SimpleFunction('drupal_entity', [$this, 'drupalEntity']),
       new \Twig_SimpleFunction('drupal_field', [$this, 'drupalField']),
       new \Twig_SimpleFunction('drupal_menu', [$this, 'drupalMenu']),
+      new \Twig_SimpleFunction('drupal_form', [$this, 'drupalForm']),
+      new \Twig_SimpleFunction('drupal_token', [$this, 'drupalToken']),
       new \Twig_SimpleFunction('drupal_config', [$this, 'drupalConfig']),
       new \Twig_SimpleFunction('drupal_dump', [$this, 'drupalDump']),
       new \Twig_SimpleFunction('dd', [$this, 'drupalDump']),
@@ -138,6 +139,21 @@ class TwigExtension extends \Twig_Extension {
    */
   public function getName() {
     return 'twig_tweak';
+  }
+
+  /**
+   * Builds the render array for the provided block.
+   *
+   * @param mixed $id
+   *   The ID of the block to render.
+   *
+   * @return null|array
+   *   A render array for the block or NULL if the block does not exist.
+   */
+  public function drupalBlock($id) {
+    $block = $this->entityTypeManager->getStorage('block')->load($id);
+    return $block ?
+      $this->entityTypeManager->getViewBuilder('block')->view($block) : '';
   }
 
   /**
@@ -174,45 +190,6 @@ class TwigExtension extends \Twig_Extension {
     }
 
     return $build;
-  }
-
-  /**
-   * Builds the render array for the provided block.
-   *
-   * @param mixed $id
-   *   The ID of the block to render.
-   *
-   * @return null|array
-   *   A render array for the block or NULL if the block does not exist.
-   */
-  public function drupalBlock($id) {
-    $block = $this->entityTypeManager->getStorage('block')->load($id);
-    return $block ?
-      $this->entityTypeManager->getViewBuilder('block')->view($block) : '';
-  }
-
-  /**
-   * Replaces a given tokens with appropriate value.
-   *
-   * @param string $token
-   *   A replaceable token.
-   * @param array $data
-   *   (optional) An array of keyed objects. For simple replacement scenarios
-   *   'node', 'user', and others are common keys, with an accompanying node or
-   *   user object being the value. Some token types, like 'site', do not
-   *   require any explicit information from $data and can be replaced even if
-   *   it is empty.
-   * @param array $options
-   *   (optional) A keyed array of settings and flags to control the token
-   *   replacement process.
-   *
-   * @return string
-   *   The token value.
-   *
-   * @see \Drupal\Core\Utility\Token::replace()
-   */
-  public function drupalToken($token, array $data = [], array $options = []) {
-    return $this->token->replace("[$token]", $data, $options);
   }
 
   /**
@@ -308,6 +285,43 @@ class TwigExtension extends \Twig_Extension {
   }
 
   /**
+   * Builds and processes a form for a given form ID.
+   *
+   * @param string $form_id
+   *   The form ID.
+   *
+   * @return array
+   *   A render array to represent the form.
+   */
+  public function drupalForm($form_id) {
+    return \Drupal::formBuilder()->getForm($form_id);
+  }
+
+  /**
+   * Replaces a given tokens with appropriate value.
+   *
+   * @param string $token
+   *   A replaceable token.
+   * @param array $data
+   *   (optional) An array of keyed objects. For simple replacement scenarios
+   *   'node', 'user', and others are common keys, with an accompanying node or
+   *   user object being the value. Some token types, like 'site', do not
+   *   require any explicit information from $data and can be replaced even if
+   *   it is empty.
+   * @param array $options
+   *   (optional) A keyed array of settings and flags to control the token
+   *   replacement process.
+   *
+   * @return string
+   *   The token value.
+   *
+   * @see \Drupal\Core\Utility\Token::replace()
+   */
+  public function drupalToken($token, array $data = [], array $options = []) {
+    return $this->token->replace("[$token]", $data, $options);
+  }
+
+  /**
    * Gets data from this configuration.
    *
    * @param string $name
@@ -323,22 +337,47 @@ class TwigExtension extends \Twig_Extension {
   }
 
   /**
-   * Evaluates a string of PHP code.
-   *
-   * @param string $code
-   *   Valid PHP code to be evaluated.
-   *
-   * @return mixed
-   *   The eval() result.
+   * Dumps information about variables.
    */
-  public function phpFilter($code) {
-    ob_start();
-    // @codingStandardsIgnoreStart
-    print eval($code);
-    // @codingStandardsIgnoreEnd
-    $output = ob_get_contents();
-    ob_end_clean();
-    return $output;
+  public function drupalDump() {
+    $var_dumper = '\Symfony\Component\VarDumper\VarDumper';
+    if (class_exists($var_dumper)) {
+      call_user_func($var_dumper . '::dump', func_get_args());
+    }
+    else {
+      trigger_error('Could not dump the variable because symfony/var-dumper component is not installed.', E_USER_WARNING);
+    }
+  }
+
+  /**
+   * An alias for self::drupalDump().
+   *
+   * @see \Drupal\twig_tweak\TwigExtension::drupalDump();
+   */
+  public function dd() {
+    $this->drupalDump(func_get_args());
+  }
+
+  /**
+   * Sets a message to display to the user.
+   *
+   * @param string|\Drupal\Component\Render\MarkupInterface $message
+   *   (optional) The translated message to be displayed to the user.
+   * @param string $type
+   *   (optional) The message's type. Defaults to 'status'.
+   * @param bool $repeat
+   *   (optional) If this is FALSE and the message is already set, then the
+   *   message will not be repeated. Defaults to FALSE.
+   *
+   * @return array
+   *   A render array to disable caching.
+   *
+   * @see drupal_set_message()
+   */
+  public function drupalSetMessage($message = NULL, $type = 'status', $repeat = FALSE) {
+    drupal_set_message($message, $type, $repeat);
+    $build['#cache']['max-age'] = 0;
+    return $build;
   }
 
   /**
@@ -390,47 +429,22 @@ class TwigExtension extends \Twig_Extension {
   }
 
   /**
-   * Sets a message to display to the user.
+   * Evaluates a string of PHP code.
    *
-   * @param string|\Drupal\Component\Render\MarkupInterface $message
-   *   (optional) The translated message to be displayed to the user.
-   * @param string $type
-   *   (optional) The message's type. Defaults to 'status'.
-   * @param bool $repeat
-   *   (optional) If this is FALSE and the message is already set, then the
-   *   message will not be repeated. Defaults to FALSE.
+   * @param string $code
+   *   Valid PHP code to be evaluated.
    *
-   * @return array
-   *   A render array to disable caching.
-   *
-   * @see drupal_set_message()
+   * @return mixed
+   *   The eval() result.
    */
-  public function drupalSetMessage($message = NULL, $type = 'status', $repeat = FALSE) {
-    drupal_set_message($message, $type, $repeat);
-    $build['#cache']['max-age'] = 0;
-    return $build;
-  }
-
-  /**
-   * Dumps information about variables.
-   */
-  public function drupalDump() {
-    $var_dumper = '\Symfony\Component\VarDumper\VarDumper';
-    if (class_exists($var_dumper)) {
-      call_user_func($var_dumper . '::dump', func_get_args());
-    }
-    else {
-      trigger_error('Could not dump the variable because symfony/var-dumper component is not installed.', E_USER_WARNING);
-    }
-  }
-
-  /**
-   * An alias for self::drupalDump().
-   *
-   * @see \Drupal\twig_tweak\TwigExtension::drupalDump();
-   */
-  public function dd() {
-    $this->drupalDump(func_get_args());
+  public function phpFilter($code) {
+    ob_start();
+    // @codingStandardsIgnoreStart
+    print eval($code);
+    // @codingStandardsIgnoreEnd
+    $output = ob_get_contents();
+    ob_end_clean();
+    return $output;
   }
 
 }
