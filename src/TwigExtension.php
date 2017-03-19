@@ -109,6 +109,8 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_field', [$this, 'drupalField']),
       new \Twig_SimpleFunction('drupal_menu', [$this, 'drupalMenu']),
       new \Twig_SimpleFunction('drupal_config', [$this, 'drupalConfig']),
+      new \Twig_SimpleFunction('drupal_dump', [$this, 'drupalDump']),
+      new \Twig_SimpleFunction('dd', [$this, 'drupalDump']),
       // Wrap drupal_set_message() because it returns some value which is not
       // suitable for Twig template.
       new \Twig_SimpleFunction('drupal_set_message', [$this, 'drupalSetMessage']),
@@ -407,6 +409,28 @@ class TwigExtension extends \Twig_Extension {
     drupal_set_message($message, $type, $repeat);
     $build['#cache']['max-age'] = 0;
     return $build;
+  }
+
+  /**
+   * Dumps information about variables.
+   */
+  public function drupalDump() {
+    $var_dumper = '\Symfony\Component\VarDumper\VarDumper';
+    if (class_exists($var_dumper)) {
+      call_user_func($var_dumper . '::dump', func_get_args());
+    }
+    else {
+      trigger_error('Could not dump the variable because symfony/var-dumper component is not installed.', E_USER_WARNING);
+    }
+  }
+
+  /**
+   * An alias for self::drupalDump().
+   *
+   * @see \Drupal\twig_tweak\TwigExtension::drupalDump();
+   */
+  public function dd() {
+    $this->drupalDump(func_get_args());
   }
 
 }
