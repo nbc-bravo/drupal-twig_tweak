@@ -5,7 +5,7 @@ namespace Drupal\Tests\twig_tweak\Functional;
 use Drupal\Tests\BrowserTestBase;
 
 /**
- * Tests twig_tweak twig extension.
+ * A test for Twig extension.
  *
  * @group twig_tweak
  */
@@ -35,7 +35,7 @@ class TwigTweakTest extends BrowserTestBase {
   }
 
   /**
-   * Tests output produced by the twig extension.
+   * Tests output produced by the Twig extension.
    */
   public function testOutput() {
     $this->drupalGet('<front>');
@@ -61,6 +61,18 @@ class TwigTweakTest extends BrowserTestBase {
     $xpath .= '//div[contains(@class, "view-twig-tweak-test")]';
     $xpath .= '/div[@class = "view-content"]//ul[count(./li) = 1]/li';
     $this->assertByXpath($xpath . '//a[contains(@href, "/node/1") and text() = "Alpha"]');
+
+    // Test block.
+    $xpath = '//div[@class = "tt-block"]';
+    $xpath .= '/div[@id="block-powered-by-drupal"]/span[contains(., "Powered by Drupal")]';
+    $this->assertByXpath($xpath);
+
+    // Test region.
+    $xpath = '//div[@class = "tt-region"]';
+    $xpath .= '/div[contains(@class, "block-page-title-block") and h1[@class="page-title" and text() = "Log in"]]';
+    $xpath .= '/following-sibling::div[@class="messages messages--warning" and contains(., "Hi!")]';
+    $xpath .= '/following-sibling::div[contains(@class, "block-system-powered-by-block")]/span[. = "Powered by Drupal"]';
+    $this->assertByXpath($xpath);
 
     // Test entity default view mode.
     $xpath = '//div[@class = "tt-entity-default"]';
@@ -99,16 +111,8 @@ class TwigTweakTest extends BrowserTestBase {
     $xpath = '//div[@class = "tt-menu-depth"]/ul[@class = "menu"]/li[not(ul)]/a[text() = "Link 1"]';
     $this->assertByXpath($xpath);
 
-    // Test region.
-    $xpath = '//div[@class = "tt-region"]';
-    $xpath .= '/div[contains(@class, "block-page-title-block") and h1[@class="page-title" and text() = "Beta"]]';
-    $xpath .= '/following-sibling::div[@class="messages messages--warning" and contains(., "Hi!")]';
-    $xpath .= '/following-sibling::div[contains(@class, "block-system-powered-by-block")]/span[. = "Powered by Drupal"]';
-    $this->assertByXpath($xpath);
-
-    // Test block.
-    $xpath = '//div[@class = "tt-block"]';
-    $xpath .= '/div[@id="block-powered-by-drupal"]/span[contains(., "Powered by Drupal")]';
+    // Test form.
+    $xpath = '//div[@class = "tt-form"]/form[@class="system-cron-settings"]/input[@type = "submit" and @value = "Run cron"]';
     $this->assertByXpath($xpath);
 
     // Test token.

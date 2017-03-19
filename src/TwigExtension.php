@@ -6,6 +6,7 @@ use Drupal\Core\Block\TitleBlockPluginInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\TitleResolverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
+use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Menu\MenuLinkTreeInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Site\Settings;
@@ -69,6 +70,13 @@ class TwigExtension extends \Twig_Extension {
   protected $titleResolver;
 
   /**
+   * The form builder.
+   *
+   * @var \Drupal\Core\Form\FormBuilderInterface
+   */
+  protected $formBuilder;
+
+  /**
    * TwigExtension constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -85,8 +93,10 @@ class TwigExtension extends \Twig_Extension {
    *   The request stack.
    * @param \Drupal\Core\Controller\TitleResolverInterface $title_resolver
    *   The title resolver.
+   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
+   *   The form builder.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match, MenuLinkTreeInterface $menu_tree, RequestStack $request_stack, TitleResolverInterface $title_resolver) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match, MenuLinkTreeInterface $menu_tree, RequestStack $request_stack, TitleResolverInterface $title_resolver, FormBuilderInterface $form_builder) {
     $this->entityTypeManager = $entity_type_manager;
     $this->token = $token;
     $this->configFactory = $config_factory;
@@ -94,6 +104,7 @@ class TwigExtension extends \Twig_Extension {
     $this->menuTree = $menu_tree;
     $this->requestStack = $request_stack;
     $this->titleResolver = $title_resolver;
+    $this->formBuilder = $form_builder;
   }
 
   /**
@@ -294,7 +305,7 @@ class TwigExtension extends \Twig_Extension {
    *   A render array to represent the form.
    */
   public function drupalForm($form_id) {
-    return \Drupal::formBuilder()->getForm($form_id);
+    return $this->formBuilder->getForm($form_id);
   }
 
   /**
