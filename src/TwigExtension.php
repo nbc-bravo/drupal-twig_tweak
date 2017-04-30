@@ -5,6 +5,7 @@ namespace Drupal\twig_tweak;
 use Drupal\Core\Block\TitleBlockPluginInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Controller\TitleResolverInterface;
+use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Menu\MenuLinkTreeInterface;
@@ -176,8 +177,10 @@ class TwigExtension extends \Twig_Extension {
    */
   public function drupalBlock($id) {
     $block = $this->entityTypeManager->getStorage('block')->load($id);
-    return $block ?
-      $this->entityTypeManager->getViewBuilder('block')->view($block) : '';
+    if ($block && $this->entityAccess($block)) {
+      return $this->entityTypeManager->getViewBuilder('block')->view($block);
+    }
+    return NULL;
   }
 
   /**
@@ -201,20 +204,19 @@ class TwigExtension extends \Twig_Extension {
     $view_builder = $this->entityTypeManager->getViewBuilder('block');
 
     $build = [];
+
     /* @var $blocks \Drupal\block\BlockInterface[] */
     foreach ($blocks as $id => $block) {
-      // Should the block be displayed? (follow rules from block layout page).
-      if (!$block->access('view')) {
-        continue;
-      }
-      $block_plugin = $block->getPlugin();
-      if ($block_plugin instanceof TitleBlockPluginInterface) {
-        $request = $this->requestStack->getCurrentRequest();
-        if ($route = $request->attributes->get(RouteObjectInterface::ROUTE_OBJECT)) {
-          $block_plugin->setTitle($this->titleResolver->getTitle($request, $route));
+      if ($this->entityAccess($block)) {
+        $block_plugin = $block->getPlugin();
+        if ($block_plugin instanceof TitleBlockPluginInterface) {
+          $request = $this->requestStack->getCurrentRequest();
+          if ($route = $request->attributes->get(RouteObjectInterface::ROUTE_OBJECT)) {
+            $block_plugin->setTitle($this->titleResolver->getTitle($request, $route));
+          }
         }
+        $build[$id] = $view_builder->view($block);
       }
-      $build[$id] = $view_builder->view($block);
     }
 
     return $build;
@@ -240,7 +242,7 @@ class TwigExtension extends \Twig_Extension {
     $entity = $id ?
       $this->entityTypeManager->getStorage($entity_type)->load($id) :
       $this->routeMatch->getParameter($entity_type);
-    if ($entity) {
+    if ($entity && $this->entityAccess($entity)) {
       $render_controller = $this->entityTypeManager->getViewBuilder($entity_type);
       return $render_controller->view($entity, $view_mode, $langcode);
     }
@@ -265,14 +267,16 @@ class TwigExtension extends \Twig_Extension {
    *   A render array for the field or NULL if the value does not exist.
    */
   public function drupalField($field_name, $entity_type, $id = NULL, $view_mode = 'default', $langcode = NULL) {
-    $entity = $id ?
-      $this->entityTypeManager->getStorage($entity_type)->load($id) :
-      $this->routeMatch->getParameter($entity_type);
-    if ($langcode && $entity->hasTranslation($langcode)) {
-      $entity = $entity->getTranslation($langcode);
-    }
-    if (isset($entity->{$field_name})) {
-      return $entity->{$field_name}->view($view_mode);
+    $entity = $id
+      ? $this->entityTypeManager->getStorage($entity_type)->load($id)
+      : $this->routeMatch->getParameter($entity_type);
+    if ($entity && $this->entityAccess($entity)) {
+      if ($langcode && $entity->hasTranslation($langcode)) {
+        $entity = $entity->getTranslation($langcode);
+      }
+      if (isset($entity->{$field_name})) {
+        return $entity->{$field_name}->view($view_mode);
+      }
     }
     return NULL;
   }
@@ -490,6 +494,23 @@ class TwigExtension extends \Twig_Extension {
     $output = ob_get_contents();
     ob_end_clean();
     return $output;
+  }
+
+  /**
+   * Checks view access to a given entity.
+   *
+   * @param \Drupal\Core\Entity\EntityInterface $entity
+   *    Entity to check access.
+   *
+   * @return bool
+   *   The access check result.
+   *
+   * @TODO Remove "check_access" option in 9.x.
+   */
+  protected function entityAccess(EntityInterface $entity) {
+    // Prior version 8.x-1.7 entity access was not checked. The "check_access"
+    // option provides a workaround for possible BC issues.
+    return !Settings::get('twig_tweak_check_access', TRUE) || $entity->access('view');
   }
 
 }

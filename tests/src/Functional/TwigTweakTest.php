@@ -66,7 +66,7 @@ class TwigTweakTest extends BrowserTestBase {
 
     // Test block.
     $xpath = '//div[@class = "tt-block"]';
-    $xpath .= '/div[@id="block-powered-by-drupal"]/span[contains(., "Powered by Drupal")]';
+    $xpath .= '/div[@id="block-classy-powered-by-drupal"]/span[contains(., "Powered by Drupal")]';
     $this->assertByXpath($xpath);
 
     // Test region.
