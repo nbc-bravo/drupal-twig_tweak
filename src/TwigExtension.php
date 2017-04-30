@@ -3,122 +3,18 @@
 namespace Drupal\twig_tweak;
 
 use Drupal\Core\Block\TitleBlockPluginInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Controller\TitleResolverInterface;
 use Drupal\Core\Entity\EntityInterface;
-use Drupal\Core\Entity\EntityTypeManagerInterface;
-use Drupal\Core\Form\FormBuilderInterface;
-use Drupal\Core\Menu\MenuLinkTreeInterface;
-use Drupal\Core\Render\RendererInterface;
-use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Site\Settings;
-use Drupal\Core\StringTranslation\TranslatableMarkup;
-use Drupal\Core\Utility\Token;
 use Drupal\image\Entity\ImageStyle;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
-use Symfony\Component\HttpFoundation\RequestStack;
 
 /**
  * Twig extension with some useful functions and filters.
+ *
+ * As version 1.7 all dependencies are instantiated on demand for performance
+ * reasons.
  */
 class TwigExtension extends \Twig_Extension {
-
-  /**
-   * The entity type manager.
-   *
-   * @var \Drupal\Core\Entity\EntityTypeManagerInterface
-   */
-  protected $entityTypeManager;
-
-  /**
-   * The token service.
-   *
-   * @var \Drupal\Core\Utility\Token
-   */
-  protected $token;
-
-  /**
-   * The configuration factory.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * The route match.
-   *
-   * @var \Drupal\Core\Routing\RouteMatchInterface
-   */
-  protected $routeMatch;
-
-  /**
-   * The menu link tree service.
-   *
-   * @var \Drupal\Core\Menu\MenuLinkTreeInterface
-   */
-  protected $menuTree;
-
-  /**
-   * The request stack.
-   *
-   * @var \Symfony\Component\HttpFoundation\RequestStack
-   */
-  protected $requestStack;
-
-  /**
-   * The title resolver.
-   *
-   * @var \Drupal\Core\Controller\TitleResolverInterface
-   */
-  protected $titleResolver;
-
-  /**
-   * The form builder.
-   *
-   * @var \Drupal\Core\Form\FormBuilderInterface
-   */
-  protected $formBuilder;
-
-  /**
-   * The renderer.
-   *
-   * @var \Drupal\Core\Render\RendererInterface
-   */
-  protected $renderer;
-
-  /**
-   * TwigExtension constructor.
-   *
-   * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
-   *   The entity type manager.
-   * @param \Drupal\Core\Utility\Token $token
-   *   The token service.
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The configuration factory.
-   * @param \Drupal\Core\Routing\RouteMatchInterface $route_match
-   *   The route match.
-   * @param \Drupal\Core\Menu\MenuLinkTreeInterface $menu_tree
-   *   The menu tree service.
-   * @param \Symfony\Component\HttpFoundation\RequestStack $request_stack
-   *   The request stack.
-   * @param \Drupal\Core\Controller\TitleResolverInterface $title_resolver
-   *   The title resolver.
-   * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
-   *   The form builder.
-   * @param \Drupal\Core\Render\RendererInterface $renderer
-   *   The renderer.
-   */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match, MenuLinkTreeInterface $menu_tree, RequestStack $request_stack, TitleResolverInterface $title_resolver, FormBuilderInterface $form_builder, RendererInterface $renderer) {
-    $this->entityTypeManager = $entity_type_manager;
-    $this->token = $token;
-    $this->configFactory = $config_factory;
-    $this->routeMatch = $route_match;
-    $this->menuTree = $menu_tree;
-    $this->requestStack = $request_stack;
-    $this->titleResolver = $title_resolver;
-    $this->formBuilder = $form_builder;
-    $this->renderer = $renderer;
-  }
 
   /**
    * {@inheritdoc}
@@ -176,9 +72,10 @@ class TwigExtension extends \Twig_Extension {
    *   A render array for the block or NULL if the block does not exist.
    */
   public function drupalBlock($id) {
-    $block = $this->entityTypeManager->getStorage('block')->load($id);
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $block = $entity_type_manager->getStorage('block')->load($id);
     if ($block && $this->entityAccess($block)) {
-      return $this->entityTypeManager->getViewBuilder('block')->view($block);
+      return $entity_type_manager->getViewBuilder('block')->view($block);
     }
     return NULL;
   }
@@ -196,12 +93,13 @@ class TwigExtension extends \Twig_Extension {
    *   A render array to display the region content.
    */
   public function drupalRegion($region, $theme = NULL) {
-    $blocks = $this->entityTypeManager->getStorage('block')->loadByProperties([
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $blocks = $entity_type_manager->getStorage('block')->loadByProperties([
       'region' => $region,
-      'theme'  => $theme ?: $this->configFactory->get('system.theme')->get('default'),
+      'theme'  => $theme ?: \Drupal::config('system.theme')->get('default'),
     ]);
 
-    $view_builder = $this->entityTypeManager->getViewBuilder('block');
+    $view_builder = $entity_type_manager->getViewBuilder('block');
 
     $build = [];
 
@@ -210,9 +108,9 @@ class TwigExtension extends \Twig_Extension {
       if ($this->entityAccess($block)) {
         $block_plugin = $block->getPlugin();
         if ($block_plugin instanceof TitleBlockPluginInterface) {
-          $request = $this->requestStack->getCurrentRequest();
+          $request = \Drupal::request();
           if ($route = $request->attributes->get(RouteObjectInterface::ROUTE_OBJECT)) {
-            $block_plugin->setTitle($this->titleResolver->getTitle($request, $route));
+            $block_plugin->setTitle(\Drupal::service('title_resolver')->getTitle($request, $route));
           }
         }
         $build[$id] = $view_builder->view($block);
@@ -239,11 +137,12 @@ class TwigExtension extends \Twig_Extension {
    *   A render array for the entity or NULL if the entity does not exist.
    */
   public function drupalEntity($entity_type, $id = NULL, $view_mode = NULL, $langcode = NULL) {
-    $entity = $id ?
-      $this->entityTypeManager->getStorage($entity_type)->load($id) :
-      $this->routeMatch->getParameter($entity_type);
+    $entity_type_manager = \Drupal::entityTypeManager();
+    $entity = $id
+      ? $entity_type_manager->getStorage($entity_type)->load($id)
+      : \Drupal::routeMatch()->getParameter($entity_type);
     if ($entity && $this->entityAccess($entity)) {
-      $render_controller = $this->entityTypeManager->getViewBuilder($entity_type);
+      $render_controller = $entity_type_manager->getViewBuilder($entity_type);
       return $render_controller->view($entity, $view_mode, $langcode);
     }
     return NULL;
@@ -267,9 +166,10 @@ class TwigExtension extends \Twig_Extension {
    *   A render array for the field or NULL if the value does not exist.
    */
   public function drupalField($field_name, $entity_type, $id = NULL, $view_mode = 'default', $langcode = NULL) {
+    /** @var \Drupal\Core\Entity\ContentEntityInterface $entity */
     $entity = $id
-      ? $this->entityTypeManager->getStorage($entity_type)->load($id)
-      : $this->routeMatch->getParameter($entity_type);
+      ? \Drupal::entityTypeManager()->getStorage($entity_type)->load($id)
+      : \Drupal::routeMatch()->getParameter($entity_type);
     if ($entity && $this->entityAccess($entity)) {
       if ($langcode && $entity->hasTranslation($langcode)) {
         $entity = $entity->getTranslation($langcode);
@@ -295,7 +195,9 @@ class TwigExtension extends \Twig_Extension {
    *   A render array for the menu.
    */
   public function drupalMenu($menu_name, $level = 1, $depth = 0) {
-    $parameters = $this->menuTree->getCurrentRouteMenuTreeParameters($menu_name);
+    /** @var \Drupal\Core\Menu\MenuLinkTreeInterface $menu_tree */
+    $menu_tree = \Drupal::service('menu.link_tree');
+    $parameters = $menu_tree->getCurrentRouteMenuTreeParameters($menu_name);
 
     // Adjust the menu tree parameters based on the block's configuration.
     $parameters->setMinDepth($level);
@@ -304,16 +206,16 @@ class TwigExtension extends \Twig_Extension {
     // Hence this is a relative depth that we must convert to an actual
     // (absolute) depth, that may never exceed the maximum depth.
     if ($depth > 0) {
-      $parameters->setMaxDepth(min($level + $depth - 1, $this->menuTree->maxDepth()));
+      $parameters->setMaxDepth(min($level + $depth - 1, $menu_tree->maxDepth()));
     }
 
-    $tree = $this->menuTree->load($menu_name, $parameters);
+    $tree = $menu_tree->load($menu_name, $parameters);
     $manipulators = [
       ['callable' => 'menu.default_tree_manipulators:checkAccess'],
       ['callable' => 'menu.default_tree_manipulators:generateIndexAndSort'],
     ];
-    $tree = $this->menuTree->transform($tree, $manipulators);
-    return $this->menuTree->build($tree);
+    $tree = $menu_tree->transform($tree, $manipulators);
+    return $menu_tree->build($tree);
   }
 
   /**
@@ -326,7 +228,7 @@ class TwigExtension extends \Twig_Extension {
    *   A render array to represent the form.
    */
   public function drupalForm($form_id) {
-    return $this->formBuilder->getForm($form_id);
+    return \Drupal::formBuilder()->getForm($form_id);
   }
 
   /**
@@ -350,7 +252,7 @@ class TwigExtension extends \Twig_Extension {
    * @see \Drupal\Core\Utility\Token::replace()
    */
   public function drupalToken($token, array $data = [], array $options = []) {
-    return $this->token->replace("[$token]", $data, $options);
+    return \Drupal::token()->replace("[$token]", $data, $options);
   }
 
   /**
@@ -365,7 +267,7 @@ class TwigExtension extends \Twig_Extension {
    *   The data that was requested.
    */
   public function drupalConfig($name, $key) {
-    return $this->configFactory->get($name)->get($key);
+    return \Drupal::config($name)->get($key);
   }
 
   /**
@@ -419,12 +321,11 @@ class TwigExtension extends \Twig_Extension {
    *   A render array to represent page title.
    */
   public function drupalTitle() {
-    $title = $this->titleResolver->getTitle(
-      $this->requestStack->getCurrentRequest(),
-      $this->routeMatch->getRouteObject()
+    $title = \Drupal::service('title_resolver')->getTitle(
+      \Drupal::request(),
+      \Drupal::routeMatch()->getRouteObject()
     );
-    $build['#markup'] = is_string($title) || $title instanceof TranslatableMarkup ?
-      $title : $this->renderer->render($title);
+    $build['#markup'] = render($title);
     $build['#cache']['contexts'] = ['url'];
     return $build;
   }
@@ -439,7 +340,7 @@ class TwigExtension extends \Twig_Extension {
    *   The entered HTML text with tokens replaced.
    */
   public function tokenReplaceFilter($text) {
-    return $this->token->replace($text);
+    return \Drupal::token()->replace($text);
   }
 
   /**
