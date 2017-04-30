@@ -8,8 +8,10 @@ use Drupal\Core\Controller\TitleResolverInterface;
 use Drupal\Core\Entity\EntityTypeManagerInterface;
 use Drupal\Core\Form\FormBuilderInterface;
 use Drupal\Core\Menu\MenuLinkTreeInterface;
+use Drupal\Core\Render\RendererInterface;
 use Drupal\Core\Routing\RouteMatchInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\StringTranslation\TranslatableMarkup;
 use Drupal\Core\Utility\Token;
 use Drupal\image\Entity\ImageStyle;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
@@ -77,6 +79,13 @@ class TwigExtension extends \Twig_Extension {
   protected $formBuilder;
 
   /**
+   * The renderer.
+   *
+   * @var \Drupal\Core\Render\RendererInterface
+   */
+  protected $renderer;
+
+  /**
    * TwigExtension constructor.
    *
    * @param \Drupal\Core\Entity\EntityTypeManagerInterface $entity_type_manager
@@ -95,8 +104,10 @@ class TwigExtension extends \Twig_Extension {
    *   The title resolver.
    * @param \Drupal\Core\Form\FormBuilderInterface $form_builder
    *   The form builder.
+   * @param \Drupal\Core\Render\RendererInterface $renderer
+   *   The renderer.
    */
-  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match, MenuLinkTreeInterface $menu_tree, RequestStack $request_stack, TitleResolverInterface $title_resolver, FormBuilderInterface $form_builder) {
+  public function __construct(EntityTypeManagerInterface $entity_type_manager, Token $token, ConfigFactoryInterface $config_factory, RouteMatchInterface $route_match, MenuLinkTreeInterface $menu_tree, RequestStack $request_stack, TitleResolverInterface $title_resolver, FormBuilderInterface $form_builder, RendererInterface $renderer) {
     $this->entityTypeManager = $entity_type_manager;
     $this->token = $token;
     $this->configFactory = $config_factory;
@@ -105,6 +116,7 @@ class TwigExtension extends \Twig_Extension {
     $this->requestStack = $request_stack;
     $this->titleResolver = $title_resolver;
     $this->formBuilder = $form_builder;
+    $this->renderer = $renderer;
   }
 
   /**
@@ -126,6 +138,7 @@ class TwigExtension extends \Twig_Extension {
       // Wrap drupal_set_message() because it returns some value which is not
       // suitable for Twig template.
       new \Twig_SimpleFunction('drupal_set_message', [$this, 'drupalSetMessage']),
+      new \Twig_SimpleFunction('drupal_title', [$this, 'drupalTitle']),
     ];
   }
 
@@ -388,6 +401,23 @@ class TwigExtension extends \Twig_Extension {
   public function drupalSetMessage($message = NULL, $type = 'status', $repeat = FALSE) {
     drupal_set_message($message, $type, $repeat);
     $build['#cache']['max-age'] = 0;
+    return $build;
+  }
+
+  /**
+   * Returns a title for the current route.
+   *
+   * @return array
+   *   A render array to represent page title.
+   */
+  public function drupalTitle() {
+    $title = $this->titleResolver->getTitle(
+      $this->requestStack->getCurrentRequest(),
+      $this->routeMatch->getRouteObject()
+    );
+    $build['#markup'] = is_string($title) || $title instanceof TranslatableMarkup ?
+      $title : $this->renderer->render($title);
+    $build['#cache']['contexts'] = ['url'];
     return $build;
   }
 

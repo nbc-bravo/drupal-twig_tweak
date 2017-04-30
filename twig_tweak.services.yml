@@ -10,5 +10,6 @@ services:
       - '@request_stack'
       - '@title_resolver'
       - '@form_builder'
+      - '@renderer'
     tags:
       - { name: twig.extension }
