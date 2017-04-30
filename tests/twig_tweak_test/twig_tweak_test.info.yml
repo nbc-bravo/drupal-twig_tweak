@@ -4,5 +4,5 @@ description: Support module for Tweak twig testing.
 package: Testing
 core: 8.x
 dependencies:
-  - twig_tweak
-  - node
+  - drupa:twig_tweak
+  - drupal:node

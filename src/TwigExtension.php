@@ -77,7 +77,6 @@ class TwigExtension extends \Twig_Extension {
     if ($block && $this->entityAccess($block)) {
       return $entity_type_manager->getViewBuilder('block')->view($block);
     }
-    return NULL;
   }
 
   /**
@@ -145,7 +144,6 @@ class TwigExtension extends \Twig_Extension {
       $render_controller = $entity_type_manager->getViewBuilder($entity_type);
       return $render_controller->view($entity, $view_mode, $langcode);
     }
-    return NULL;
   }
 
   /**
@@ -178,7 +176,6 @@ class TwigExtension extends \Twig_Extension {
         return $entity->{$field_name}->view($view_mode);
       }
     }
-    return NULL;
   }
 
   /**
@@ -373,6 +370,7 @@ class TwigExtension extends \Twig_Extension {
    *   in an <img> tag. Requesting the URL will cause the image to be created.
    */
   public function imageStyle($path, $style) {
+    /** @var \Drupal\Image\ImageStyleInterface $image_style */
     if ($image_style = ImageStyle::load($style)) {
       return file_url_transform_relative($image_style->buildUrl($path));
     }
@@ -401,7 +399,7 @@ class TwigExtension extends \Twig_Extension {
    * Checks view access to a given entity.
    *
    * @param \Drupal\Core\Entity\EntityInterface $entity
-   *    Entity to check access.
+   *   Entity to check access.
    *
    * @return bool
    *   The access check result.
