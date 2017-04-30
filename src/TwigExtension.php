@@ -203,6 +203,10 @@ class TwigExtension extends \Twig_Extension {
     $build = [];
     /* @var $blocks \Drupal\block\BlockInterface[] */
     foreach ($blocks as $id => $block) {
+      // Should the block be displayed? (follow rules from block layout page).
+      if (!$block->access('view')) {
+        continue;
+      }
       $block_plugin = $block->getPlugin();
       if ($block_plugin instanceof TitleBlockPluginInterface) {
         $request = $this->requestStack->getCurrentRequest();
