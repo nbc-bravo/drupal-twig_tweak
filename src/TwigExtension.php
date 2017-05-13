@@ -67,14 +67,16 @@ class TwigExtension extends \Twig_Extension {
    *
    * @param mixed $id
    *   The ID of the block to render.
+   * @param bool $check_access
+   *   (Optional) Indicates that access check is required.
    *
    * @return null|array
    *   A render array for the block or NULL if the block does not exist.
    */
-  public function drupalBlock($id) {
+  public function drupalBlock($id, $check_access = TRUE) {
     $entity_type_manager = \Drupal::entityTypeManager();
     $block = $entity_type_manager->getStorage('block')->load($id);
-    if ($block && $this->entityAccess($block)) {
+    if ($block && (!$check_access || $this->entityAccess($block))) {
       return $entity_type_manager->getViewBuilder('block')->view($block);
     }
   }
