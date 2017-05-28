@@ -222,16 +222,16 @@ class TwigExtension extends \Twig_Extension {
    *
    * @param string $form_id
    *   The form ID.
+   * @param ...
+   *   Additional arguments are passed to form constructor.
    *
    * @return array
    *   A render array to represent the form.
    */
   public function drupalForm($form_id) {
+    $form_builder = \Drupal::formBuilder();
     $args = func_get_args();
-    // Enforcing the $form_id is always the first argument.
-    $args[0] = $form_id;
-    $formBuilder = \Drupal::formBuilder();
-    return call_user_func_array(array($formBuilder, 'getForm'), $args);
+    return call_user_func_array([$form_builder, 'getForm'], $args);
   }
 
   /**
