@@ -227,7 +227,11 @@ class TwigExtension extends \Twig_Extension {
    *   A render array to represent the form.
    */
   public function drupalForm($form_id) {
-    return \Drupal::formBuilder()->getForm($form_id);
+    $args = func_get_args();
+    // Enforcing the $form_id is always the first argument.
+    $args[0] = $form_id;
+    $formBuilder = \Drupal::formBuilder();
+    return call_user_func_array(array($formBuilder, 'getForm'), $args);
   }
 
   /**
