@@ -47,6 +47,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFilter('token_replace', [$this, 'tokenReplaceFilter']),
       new \Twig_SimpleFilter('preg_replace', [$this, 'pregReplaceFilter']),
       new \Twig_SimpleFilter('image_style', [$this, 'imageStyle']),
+      new \Twig_SimpleFilter('transliterate', [$this, 'transliterate']),
     ];
     // PHP filter should be enabled in settings.php file.
     if (Settings::get('twig_tweak_enable_php_filter')) {
@@ -380,6 +381,30 @@ class TwigExtension extends \Twig_Extension {
     if ($image_style = ImageStyle::load($style)) {
       return file_url_transform_relative($image_style->buildUrl($path));
     }
+  }
+
+  /**
+   * Transliterates text from Unicode to US-ASCII.
+   *
+   * @param string $string
+   *   The string to transliterate.
+   * @param string $langcode
+   *   (optional) The language code of the language the string is in. Defaults
+   *   to 'en' if not provided. Warning: this can be unfiltered user input.
+   * @param string $unknown_character
+   *   (optional) The character to substitute for characters in $string without
+   *   transliterated equivalents. Defaults to '?'.
+   * @param int $max_length
+   *   (optional) If provided, return at most this many characters, ensuring
+   *   that the transliteration does not split in the middle of an input
+   *   character's transliteration.
+   *
+   * @return string
+   *   $string with non-US-ASCII characters transliterated to US-ASCII
+   *   characters, and unknown characters replaced with $unknown_character.
+   */
+  public function transliterate($string, $langcode = 'en', $unknown_character = '?', $max_length = NULL) {
+    return \Drupal::transliteration()->transliterate($string, $langcode, $unknown_character, $max_length);
   }
 
   /**

@@ -148,6 +148,10 @@ class TwigTweakTest extends BrowserTestBase {
     // Test image style.
     $xpath = '//div[@class = "tt-image-style" and contains(text(), "styles/thumbnail/public/images/ocean.jpg")]';
     $this->assertByXpath($xpath);
+
+    // Test transliteration.
+    $xpath = '//div[@class = "tt-transliterate" and contains(text(), "Privet!")]';
+    $this->assertByXpath($xpath);
   }
 
   /**
