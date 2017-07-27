@@ -152,6 +152,10 @@ class TwigTweakTest extends BrowserTestBase {
     // Test transliteration.
     $xpath = '//div[@class = "tt-transliterate" and contains(text(), "Privet!")]';
     $this->assertByXpath($xpath);
+
+    // Test text format.
+    $xpath = '//div[@class = "tt-check-markup"]';
+    $this->assertEquals('<b>bold</b> strong', trim($this->xpath($xpath)[0]->getHtml()));
   }
 
   /**

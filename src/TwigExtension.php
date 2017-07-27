@@ -48,6 +48,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFilter('preg_replace', [$this, 'pregReplaceFilter']),
       new \Twig_SimpleFilter('image_style', [$this, 'imageStyle']),
       new \Twig_SimpleFilter('transliterate', [$this, 'transliterate']),
+      new \Twig_SimpleFilter('check_markup', [$this, 'checkMarkup']),
     ];
     // PHP filter should be enabled in settings.php file.
     if (Settings::get('twig_tweak_enable_php_filter')) {
@@ -405,6 +406,29 @@ class TwigExtension extends \Twig_Extension {
    */
   public function transliterate($string, $langcode = 'en', $unknown_character = '?', $max_length = NULL) {
     return \Drupal::transliteration()->transliterate($string, $langcode, $unknown_character, $max_length);
+  }
+
+  /**
+   * Runs all the enabled filters on a piece of text.
+   *
+   * @param string $text
+   *   The text to be filtered.
+   * @param string|null $format_id
+   *   (optional) The machine name of the filter format to be used to filter the
+   *   text. Defaults to the fallback format. See filter_fallback_format().
+   * @param string $langcode
+   *   (optional) The language code of the text to be filtered.
+   * @param array $filter_types_to_skip
+   *   (optional) An array of filter types to skip, or an empty array (default)
+   *   to skip no filter types.
+   *
+   * @return \Drupal\Component\Render\MarkupInterface
+   *   The filtered text.
+   *
+   * @see check_markup()
+   */
+  public function checkMarkup($text, $format_id = NULL, $langcode = '', array $filter_types_to_skip = []) {
+    return check_markup($text, $format_id, $langcode, $filter_types_to_skip);
   }
 
   /**
