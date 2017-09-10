@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\twig_tweak\Functional;
 
+use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -135,6 +136,11 @@ class TwigTweakTest extends BrowserTestBase {
 
     // Test page title.
     $xpath = '//div[@class = "tt-title" and text() = "Beta"]';
+    $this->assertByXpath($xpath);
+
+    // Test URL.
+    $url = Url::fromUserInput('/node/1', ['absolute' => TRUE])->toString();
+    $xpath = sprintf('//div[@class = "tt-url" and text() = "%s"]', $url);
     $this->assertByXpath($xpath);
 
     // Test token replacement.

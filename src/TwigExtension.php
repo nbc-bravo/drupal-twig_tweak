@@ -5,6 +5,7 @@ namespace Drupal\twig_tweak;
 use Drupal\Core\Block\TitleBlockPluginInterface;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\Url;
 use Drupal\image\Entity\ImageStyle;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
 
@@ -36,6 +37,7 @@ class TwigExtension extends \Twig_Extension {
       // suitable for Twig template.
       new \Twig_SimpleFunction('drupal_set_message', [$this, 'drupalSetMessage']),
       new \Twig_SimpleFunction('drupal_title', [$this, 'drupalTitle']),
+      new \Twig_SimpleFunction('drupal_url', [$this, 'drupalUrl']),
     ];
   }
 
@@ -333,6 +335,26 @@ class TwigExtension extends \Twig_Extension {
     $build['#markup'] = render($title);
     $build['#cache']['contexts'] = ['url'];
     return $build;
+  }
+
+  /**
+   * Generates a URL from internal path.
+   *
+   * @param string $user_input
+   *   User input for a link or path.
+   * @param array $options
+   *   (optional) An array of options.
+   *
+   * @return \Drupal\Core\Url
+   *   A new Url object based on user input.
+   *
+   * @see \Drupal\Core\Url::fromUserInput()
+   */
+  public function drupalUrl($user_input, array $options = []) {
+    if (!in_array($user_input[0], ['/', '#', '?'])) {
+      $user_input = '/' . $user_input;
+    }
+    return Url::fromUserInput($user_input, $options);
   }
 
   /**
