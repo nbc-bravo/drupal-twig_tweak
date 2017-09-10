@@ -384,7 +384,12 @@ class TwigExtension extends \Twig_Extension {
    *   The new text if matches are found, otherwise unchanged text.
    */
   public function pregReplaceFilter($text, $pattern, $replacement) {
-    return preg_replace("/$pattern/", $replacement, $text);
+    // BC layer. Before version 8.x-1.8 the pattern was without delimiters.
+    // @todo Remove this in Drupal 9.
+    if (strpos($pattern, '/') !== 0) {
+      return preg_replace("/$pattern/", $replacement, $text);
+    }
+    return preg_replace($pattern, $replacement, $text);
   }
 
   /**
