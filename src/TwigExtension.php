@@ -24,7 +24,6 @@ class TwigExtension extends \Twig_Extension {
     return [
       new \Twig_SimpleFunction('drupal_view', 'views_embed_view'),
       new \Twig_SimpleFunction('drupal_block', [$this, 'drupalBlock']),
-      new \Twig_SimpleFunction('drupal_plugin_block', [$this, 'drupalPluginBlock']),
       new \Twig_SimpleFunction('drupal_region', [$this, 'drupalRegion']),
       new \Twig_SimpleFunction('drupal_entity', [$this, 'drupalEntity']),
       new \Twig_SimpleFunction('drupal_field', [$this, 'drupalField']),
@@ -68,47 +67,23 @@ class TwigExtension extends \Twig_Extension {
   }
 
   /**
-   * Builds the render array for the provided block.
+   * Builds the render array for the provided block plugin.
    *
    * @param mixed $id
-   *   The ID of the block to render.
-   * @param bool $check_access
-   *   (Optional) Indicates that access check is required.
-   *
-   * @return null|array
-   *   A render array for the block or NULL if the block does not exist.
-   */
-  public function drupalBlock($id, $check_access = TRUE) {
-    $entity_type_manager = \Drupal::entityTypeManager();
-    $block = $entity_type_manager->getStorage('block')->load($id);
-    if ($block && (!$check_access || $this->entityAccess($block))) {
-      return $entity_type_manager->getViewBuilder('block')->view($block);
-    }
-  }
-
-  /**
-   * Builds the render array for the provided plugin block.
-   *
-   * @param mixed $id
-   *   The ID of the block to render.
-   * @param bool $check_access
-   *   (Optional) Indicates that access check is required.
-   * @param array $config
+   *   The ID of block plugin to render.
+   * @param array $configuration
    *   (Optional) Pass on any configuration to the plugin block.
    *
    * @return null|array
    *   A render array for the block or NULL if the block does not exist.
    */
-  public function drupalPluginBlock($id, $check_access = TRUE, $config = []) {
-    $block_manager = \Drupal::service('plugin.manager.block');
-    $plugin_block = $block_manager->createInstance($id, $config);
-    $access_result = $plugin_block->access(\Drupal::currentUser());
-
-    if ($plugin_block && (!$check_access || (is_object($access_result) && $access_result->isForbidden() || is_bool($access_result) && !$access_result))) {
-      return [];
+  public function drupalBlock($id, array $configuration = []) {
+    /** @var \Drupal\Core\Block\BlockPluginInterface $block_plugin */
+    $block_plugin = \Drupal::service('plugin.manager.block')
+      ->createInstance($id, $configuration);
+    if ($block_plugin->access(\Drupal::currentUser())) {
+      return $block_plugin->build();
     }
-
-    return $plugin_block->build();
   }
 
   /**
@@ -512,7 +487,7 @@ class TwigExtension extends \Twig_Extension {
    * @return bool
    *   The access check result.
    *
-   * @TODO Remove "check_access" option in 9.x.
+   * @todo Remove "check_access" option in 9.x.
    */
   protected function entityAccess(EntityInterface $entity) {
     // Prior version 8.x-1.7 entity access was not checked. The "check_access"
