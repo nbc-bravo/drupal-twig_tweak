@@ -24,6 +24,7 @@ class TwigExtension extends \Twig_Extension {
     return [
       new \Twig_SimpleFunction('drupal_view', 'views_embed_view'),
       new \Twig_SimpleFunction('drupal_block', [$this, 'drupalBlock']),
+      new \Twig_SimpleFunction('drupal_plugin_block', [$this, 'drupalPluginBlock']),
       new \Twig_SimpleFunction('drupal_region', [$this, 'drupalRegion']),
       new \Twig_SimpleFunction('drupal_entity', [$this, 'drupalEntity']),
       new \Twig_SimpleFunction('drupal_field', [$this, 'drupalField']),
@@ -83,6 +84,31 @@ class TwigExtension extends \Twig_Extension {
     if ($block && (!$check_access || $this->entityAccess($block))) {
       return $entity_type_manager->getViewBuilder('block')->view($block);
     }
+  }
+
+  /**
+   * Builds the render array for the provided plugin block.
+   *
+   * @param mixed $id
+   *   The ID of the block to render.
+   * @param bool $check_access
+   *   (Optional) Indicates that access check is required.
+   * @param array $config
+   *   (Optional) Pass on any configuration to the plugin block.
+   *
+   * @return null|array
+   *   A render array for the block or NULL if the block does not exist.
+   */
+  public function drupalPluginBlock($id, $check_access = TRUE, $config = []) {
+    $block_manager = \Drupal::service('plugin.manager.block');
+    $plugin_block = $block_manager->createInstance($id, $config);
+    $access_result = $plugin_block->access(\Drupal::currentUser());
+
+    if ($plugin_block && (!$check_access || (is_object($access_result) && $access_result->isForbidden() || is_bool($access_result) && !$access_result))) {
+      return [];
+    }
+
+    return $plugin_block->build();
   }
 
   /**
