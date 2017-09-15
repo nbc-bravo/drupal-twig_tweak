@@ -151,10 +151,6 @@ class TwigTweakTest extends BrowserTestBase {
     $xpath = '//div[@class = "tt-preg-replace" and text() = "FOO-bar"]';
     $this->assertByXpath($xpath);
 
-    // Test preg replacement (legacy).
-    $xpath = '//div[@class = "tt-preg-replace-legacy" and text() = "foo-bar"]';
-    $this->assertByXpath($xpath);
-
     // Test image style.
     $xpath = '//div[@class = "tt-image-style" and contains(text(), "styles/thumbnail/public/images/ocean.jpg")]';
     $this->assertByXpath($xpath);
