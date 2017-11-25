@@ -93,13 +93,11 @@ class TwigExtension extends \Twig_Extension {
    * @param string $theme
    *   (Optional) The name of the theme to load the region. If it is not
    *   provided then default theme will be used.
-   * @param bool $include_template
-   *   (Optional) Render the output using the region's Twig template.
    *
    * @return array
    *   A render array to display the region content.
    */
-  public function drupalRegion($region, $theme = NULL, $include_template = FALSE) {
+  public function drupalRegion($region, $theme = NULL) {
     $entity_type_manager = \Drupal::entityTypeManager();
     $blocks = $entity_type_manager->getStorage('block')->loadByProperties([
       'region' => $region,
@@ -124,7 +122,7 @@ class TwigExtension extends \Twig_Extension {
       }
     }
 
-    if ($include_template) {
+    if ($build) {
       $build['#region'] = $region;
       $build['#theme_wrappers'] = ['region'];
     }
