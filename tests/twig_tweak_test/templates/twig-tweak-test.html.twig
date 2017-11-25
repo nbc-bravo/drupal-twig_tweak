@@ -19,6 +19,7 @@
   <div class="tt-view-default">{{ drupal_view('twig_tweak_test') }}</div>
   <div class="tt-view-page_1">{{ drupal_view('twig_tweak_test', 'page_1') }}</div>
   <div class="tt-view-page_1-with-argument">{{ drupal_view('twig_tweak_test', 'page_1', 1) }}</div>
+  <div class="tt-view-result">{{ drupal_view_result('twig_tweak_test', 'page_1')|length }}</div>
   <div class="tt-block">{{ drupal_block('system_branding_block', {use_site_name: false}) }}</div>
   <div class="tt-region">{{ drupal_region('sidebar_first') }}</div>
   <div class="tt-entity-default">{{ drupal_entity('node', 1) }}</div>

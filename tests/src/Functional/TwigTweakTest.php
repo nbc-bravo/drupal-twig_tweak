@@ -65,6 +65,10 @@ class TwigTweakTest extends BrowserTestBase {
     $xpath .= '/div[@class = "view-content"]//ul[count(./li) = 1]/li';
     $this->assertByXpath($xpath . '//a[contains(@href, "/node/1") and text() = "Alpha"]');
 
+    // Test view result.
+    $xpath = '//div[@class = "tt-view-result" and text() = 3]';
+    $this->assertByXpath($xpath);
+
     // Test block plugin.
     $xpath = '//div[@class = "tt-block"]';
     $xpath .= '/img[contains(@src, "/core/themes/classy/logo.svg") and @alt="Home"]';
