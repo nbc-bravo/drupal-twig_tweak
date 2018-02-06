@@ -4,6 +4,7 @@ namespace Drupal\twig_tweak;
 
 use Drupal\Core\Block\TitleBlockPluginInterface;
 use Drupal\Core\Site\Settings;
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\image\Entity\ImageStyle;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
@@ -37,6 +38,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_set_message', [$this, 'drupalSetMessage']),
       new \Twig_SimpleFunction('drupal_title', [$this, 'drupalTitle']),
       new \Twig_SimpleFunction('drupal_url', [$this, 'drupalUrl']),
+      new \Twig_SimpleFunction('drupal_link', [$this, 'drupalLink']),
     ];
   }
 
@@ -352,23 +354,52 @@ class TwigExtension extends \Twig_Extension {
   }
 
   /**
-   * Generates a URL from internal path.
+   * Generates a URL from an internal path.
    *
    * @param string $user_input
    *   User input for a link or path.
    * @param array $options
    *   (optional) An array of options.
+   * @param bool $check_access
+   *   (Optional) Indicates that access check is required.
    *
    * @return \Drupal\Core\Url
    *   A new Url object based on user input.
    *
    * @see \Drupal\Core\Url::fromUserInput()
    */
-  public function drupalUrl($user_input, array $options = []) {
+  public function drupalUrl($user_input, array $options = [], $check_access = FALSE) {
     if (!in_array($user_input[0], ['/', '#', '?'])) {
       $user_input = '/' . $user_input;
     }
-    return Url::fromUserInput($user_input, $options);
+    $url = Url::fromUserInput($user_input, $options);
+    if (!$check_access || $url->access()) {
+      return $url;
+    }
+  }
+
+  /**
+   * Generates a link from an internal path.
+   *
+   * @param string $text
+   *   The text to be used for the link.
+   * @param string $user_input
+   *   User input for a link or path.
+   * @param array $options
+   *   (optional) An array of options.
+   * @param bool $check_access
+   *   (Optional) Indicates that access check is required.
+   *
+   * @return \Drupal\Core\Link
+   *   A new Link object.
+   *
+   * @see \Drupal\Core\Link::fromTextAndUrl()
+   */
+  public function drupalLink($text, $user_input, array $options = [], $check_access = FALSE) {
+    $url = $this->drupalUrl($user_input, $options, $check_access);
+    if ($url) {
+      return Link::fromTextAndUrl($text, $url);
+    }
   }
 
   /**

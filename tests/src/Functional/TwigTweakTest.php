@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\twig_tweak\Functional;
 
+use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\Tests\BrowserTestBase;
 
@@ -146,6 +147,16 @@ class TwigTweakTest extends BrowserTestBase {
     $url = Url::fromUserInput('/node/1', ['absolute' => TRUE])->toString();
     $xpath = sprintf('//div[@class = "tt-url" and text() = "%s"]', $url);
     $this->assertByXpath($xpath);
+
+    // Test link.
+    $url = Url::fromUserInput('/node/1/edit', ['absolute' => TRUE]);
+    $link = Link::fromTextAndUrl('Edit', $url)->toString();
+    $xpath = '//div[@class = "tt-link"]';
+    $this->assertEquals($link, trim($this->xpath($xpath)[0]->getHtml()));
+
+    // Test protected link.
+    $xpath = '//div[@class = "tt-link-access"]';
+    $this->assertEquals('', trim($this->xpath($xpath)[0]->getHtml()));
 
     // Test token replacement.
     $xpath = '//div[@class = "tt-token-replace" and text() = "Site name: Drupal"]';
