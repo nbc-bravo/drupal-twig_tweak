@@ -4,6 +4,8 @@ namespace Drupal\Tests\twig_tweak\Functional;
 
 use Drupal\Core\Link;
 use Drupal\Core\Url;
+use Drupal\file\Entity\File;
+use Drupal\responsive_image\Entity\ResponsiveImageStyle;
 use Drupal\Tests\BrowserTestBase;
 
 /**
@@ -23,6 +25,7 @@ class TwigTweakTest extends BrowserTestBase {
     'node',
     'block',
     'image',
+    'responsive_image',
   ];
 
   /**
@@ -34,6 +37,21 @@ class TwigTweakTest extends BrowserTestBase {
     $this->createNode(['title' => 'Alpha']);
     $this->createNode(['title' => 'Beta']);
     $this->createNode(['title' => 'Gamma']);
+
+    file_unmanaged_copy(DRUPAL_ROOT . '/core/misc/druplicon.png', 'public://druplicon.png');
+    $file = File::create([
+      'uri' => 'public://druplicon.png',
+      'filename' => 'druplicon.png',
+      'uuid' => 'b2c22b6f-7bf8-4da4-9de5-316e93487518',
+      'status' => 1,
+    ]);
+    $file->save();
+
+    ResponsiveImageStyle::create([
+      'id' => 'example',
+      'label' => 'Example',
+      'breakpoint_group' => 'responsive_image',
+    ])->save();
   }
 
   /**
@@ -121,6 +139,26 @@ class TwigTweakTest extends BrowserTestBase {
 
     // Test form.
     $xpath = '//div[@class = "tt-form"]/form[@class="system-cron-settings"]/input[@type = "submit" and @value = "Run cron"]';
+    $this->assertByXpath($xpath);
+
+    // Test image by FID.
+    $xpath = '//div[@class = "tt-image-by-fid"]/img[contains(@src, "/files/druplicon.png")]';
+    $this->assertByXpath($xpath);
+
+    // Test image by URI.
+    $xpath = '//div[@class = "tt-image-by-uri"]/img[contains(@src, "/files/druplicon.png")]';
+    $this->assertByXpath($xpath);
+
+    // Test image by UUID.
+    $xpath = '//div[@class = "tt-image-by-uuid"]/img[contains(@src, "/files/druplicon.png")]';
+    $this->assertByXpath($xpath);
+
+    // Test image with style.
+    $xpath = '//div[@class = "tt-image-with-style"]/img[contains(@src, "/files/styles/thumbnail/public/druplicon.png")]';
+    $this->assertByXpath($xpath);
+
+    // Test image with responsive style.
+    $xpath = '//div[@class = "tt-image-with-responsive-style"]/picture/img[contains(@src, "/files/druplicon.png")]';
     $this->assertByXpath($xpath);
 
     // Test token.

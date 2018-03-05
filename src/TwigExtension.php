@@ -2,9 +2,10 @@
 
 namespace Drupal\twig_tweak;
 
+use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Block\TitleBlockPluginInterface;
-use Drupal\Core\Site\Settings;
 use Drupal\Core\Link;
+use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\image\Entity\ImageStyle;
 use Symfony\Cmf\Component\Routing\RouteObjectInterface;
@@ -29,6 +30,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_field', [$this, 'drupalField']),
       new \Twig_SimpleFunction('drupal_menu', [$this, 'drupalMenu']),
       new \Twig_SimpleFunction('drupal_form', [$this, 'drupalForm']),
+      new \Twig_SimpleFunction('drupal_image', [$this, 'drupalImage']),
       new \Twig_SimpleFunction('drupal_token', [$this, 'drupalToken']),
       new \Twig_SimpleFunction('drupal_config', [$this, 'drupalConfig']),
       new \Twig_SimpleFunction('drupal_dump', [$this, 'drupalDump']),
@@ -246,6 +248,73 @@ class TwigExtension extends \Twig_Extension {
   public function drupalForm($form_id) {
     $form_builder = \Drupal::formBuilder();
     return call_user_func_array([$form_builder, 'getForm'], func_get_args());
+  }
+
+  /**
+   * Builds an image.
+   *
+   * @param mixed $property
+   *   A property to identify the image.
+   * @param string $style
+   *   (Optional) Image style.
+   * @param array $attributes
+   *   (Optional) Image attributes.
+   * @param bool $responsive
+   *   (Optional) Indicates that the provided image style is responsive.
+   * @param bool $check_access
+   *   (Optional) Indicates that access check is required.
+   *
+   * @return array|null
+   *   A render array to represent the image.
+   */
+  public function drupalImage($property, $style = NULL, array $attributes = [], $responsive = FALSE, $check_access = TRUE) {
+
+    // Determine property type by its value.
+    if (preg_match('/^\d+$/', $property)) {
+      $property_type = 'fid';
+    }
+    elseif (Uuid::isValid($property)) {
+      $property_type = 'uuid';
+    }
+    else {
+      $property_type = 'uri';
+    }
+
+    $files = \Drupal::entityTypeManager()
+      ->getStorage('file')
+      ->loadByProperties([$property_type => $property]);
+
+    // To avoid ambiguity render nothing unless exact one image was found.
+    if (count($files) != 1) {
+      return;
+    }
+
+    $file = reset($files);
+
+    if ($check_access && !$file->access('view')) {
+      return;
+    }
+
+    $build = [
+      '#uri' => $file->getFileUri(),
+      '#attributes' => $attributes,
+    ];
+
+    if ($style) {
+      if ($responsive) {
+        $build['#type'] = 'responsive_image';
+        $build['#responsive_image_style_id'] = $style;
+      }
+      else {
+        $build['#theme'] = 'image_style';
+        $build['#style_name'] = $style;
+      }
+    }
+    else {
+      $build['#theme'] = 'image';
+    }
+
+    return $build;
   }
 
   /**
