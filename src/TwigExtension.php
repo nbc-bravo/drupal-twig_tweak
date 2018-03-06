@@ -206,11 +206,13 @@ class TwigExtension extends \Twig_Extension {
    *   (optional) Initial menu level.
    * @param int $depth
    *   (optional) Maximum number of menu levels to display.
+   * @param bool $expand
+   *   (optional) Expand all menu links.
    *
    * @return array
    *   A render array for the menu.
    */
-  public function drupalMenu($menu_name, $level = 1, $depth = 0) {
+  public function drupalMenu($menu_name, $level = 1, $depth = 0, $expand = FALSE) {
     /** @var \Drupal\Core\Menu\MenuLinkTreeInterface $menu_tree */
     $menu_tree = \Drupal::service('menu.link_tree');
     $parameters = $menu_tree->getCurrentRouteMenuTreeParameters($menu_name);
@@ -223,6 +225,11 @@ class TwigExtension extends \Twig_Extension {
     // (absolute) depth, that may never exceed the maximum depth.
     if ($depth > 0) {
       $parameters->setMaxDepth(min($level + $depth - 1, $menu_tree->maxDepth()));
+    }
+
+    // If expandedParents is empty, the whole menu tree is built.
+    if ($expand) {
+      $parameters->expandedParents = [];
     }
 
     $tree = $menu_tree->load($menu_name, $parameters);
