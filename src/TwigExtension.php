@@ -4,6 +4,7 @@ namespace Drupal\twig_tweak;
 
 use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Block\TitleBlockPluginInterface;
+use Drupal\Core\Language\LanguageInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
@@ -188,9 +189,8 @@ class TwigExtension extends \Twig_Extension {
       ? \Drupal::entityTypeManager()->getStorage($entity_type)->load($id)
       : \Drupal::routeMatch()->getParameter($entity_type);
     if ($entity && (!$check_access || $entity->access('view'))) {
-      if ($langcode && $entity->hasTranslation($langcode)) {
-        $entity = $entity->getTranslation($langcode);
-      }
+      $entity = \Drupal::service('entity.repository')
+        ->getTranslationFromContext($entity, $langcode);
       if (isset($entity->{$field_name})) {
         return $entity->{$field_name}->view($view_mode);
       }
