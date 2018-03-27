@@ -4,7 +4,9 @@ namespace Drupal\twig_tweak;
 
 use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Block\TitleBlockPluginInterface;
-use Drupal\Core\Language\LanguageInterface;
+use Drupal\Core\Entity\EntityInterface;
+use Drupal\Core\Field\FieldItemInterface;
+use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
@@ -55,6 +57,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFilter('image_style', [$this, 'imageStyle']),
       new \Twig_SimpleFilter('transliterate', [$this, 'transliterate']),
       new \Twig_SimpleFilter('check_markup', [$this, 'checkMarkup']),
+      new \Twig_SimpleFilter('view', [$this, 'view']),
     ];
     // PHP filter should be enabled in settings.php file.
     if (Settings::get('twig_tweak_enable_php_filter')) {
@@ -141,7 +144,7 @@ class TwigExtension extends \Twig_Extension {
    * @param string $entity_type
    *   The entity type.
    * @param mixed $id
-   *   The ID of the entity to render.
+   *   The ID of the entity to build.
    * @param string $view_mode
    *   (optional) The view mode that should be used to render the entity.
    * @param string $langcode
@@ -572,6 +575,33 @@ class TwigExtension extends \Twig_Extension {
    */
   public function checkMarkup($text, $format_id = NULL, $langcode = '', array $filter_types_to_skip = []) {
     return check_markup($text, $format_id, $langcode, $filter_types_to_skip);
+  }
+
+  /**
+   * Returns a render array for entity, field list or field item.
+   *
+   * @param mixed $object
+   *   The object to build a render array from.
+   * @param string $view_mode
+   *   (optional) The view mode that should be used to render the field.
+   * @param string $langcode
+   *   (optional) For which language the entity should be rendered, defaults to
+   *   the current content language.
+   * @param bool $check_access
+   *   (Optional) Indicates that access check is required.
+   *
+   * @return array
+   *   A render array to represent the object.
+   */
+  public function view($object, $view_mode = 'default', $langcode = NULL, $check_access = TRUE) {
+    if ($object instanceof FieldItemListInterface || $object instanceof FieldItemInterface) {
+      return $object->view($view_mode);
+    }
+    elseif ($object instanceof EntityInterface && (!$check_access || $object->access('view'))) {
+      return \Drupal::entityTypeManager()
+        ->getViewBuilder($object->getEntityTypeId())
+        ->view($object, $view_mode, $langcode);
+    }
   }
 
   /**

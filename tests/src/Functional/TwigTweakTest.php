@@ -215,6 +215,20 @@ class TwigTweakTest extends BrowserTestBase {
     // Test text format.
     $xpath = '//div[@class = "tt-check-markup"]';
     $this->assertEquals('<b>bold</b> strong', trim($this->xpath($xpath)[0]->getHtml()));
+
+    // Test node view.
+    $xpath = '//div[@class = "tt-node-view"]/article[contains(@class, "node--view-mode-default")]/h2[a/span[text() = "Beta"]]';
+    $xpath .= '/following-sibling::footer[//h4[text() = "Member for"]]';
+    $xpath .= '/following-sibling::div[@class = "node__content"]/div/p';
+    $this->assertByXpath($xpath);
+
+    // Field list view.
+    $xpath = '//div[@class = "tt-field-list-view"]/span[contains(@class, "field--name-title") and text() = "Beta"]';
+    $this->assertByXpath($xpath);
+
+    // Field item view.
+    $xpath = '//div[@class = "tt-field-item-view" and text() = "Beta"]';
+    $this->assertByXpath($xpath);
   }
 
   /**
