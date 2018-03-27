@@ -582,8 +582,8 @@ class TwigExtension extends \Twig_Extension {
    *
    * @param mixed $object
    *   The object to build a render array from.
-   * @param string $view_mode
-   *   (optional) The view mode that should be used to render the field.
+   * @param string|array $display_options
+   *   Can be either the name of a view mode, or an array of display settings.
    * @param string $langcode
    *   (optional) For which language the entity should be rendered, defaults to
    *   the current content language.
@@ -593,14 +593,14 @@ class TwigExtension extends \Twig_Extension {
    * @return array
    *   A render array to represent the object.
    */
-  public function view($object, $view_mode = 'default', $langcode = NULL, $check_access = TRUE) {
+  public function view($object, $display_options = 'default', $langcode = NULL, $check_access = TRUE) {
     if ($object instanceof FieldItemListInterface || $object instanceof FieldItemInterface) {
-      return $object->view($view_mode);
+      return $object->view($display_options);
     }
     elseif ($object instanceof EntityInterface && (!$check_access || $object->access('view'))) {
       return \Drupal::entityTypeManager()
         ->getViewBuilder($object->getEntityTypeId())
-        ->view($object, $view_mode, $langcode);
+        ->view($object, $display_options, $langcode);
     }
   }
 

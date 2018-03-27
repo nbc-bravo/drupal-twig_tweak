@@ -190,11 +190,11 @@ class TwigTweakTest extends BrowserTestBase {
     $url = Url::fromUserInput('/node/1/edit', ['absolute' => TRUE]);
     $link = Link::fromTextAndUrl('Edit', $url)->toString();
     $xpath = '//div[@class = "tt-link"]';
-    $this->assertEquals($link, trim($this->xpath($xpath)[0]->getHtml()));
+    self::assertEquals($link, trim($this->xpath($xpath)[0]->getHtml()));
 
     // Test protected link.
     $xpath = '//div[@class = "tt-link-access"]';
-    $this->assertEquals('', trim($this->xpath($xpath)[0]->getHtml()));
+    self::assertEquals('', trim($this->xpath($xpath)[0]->getHtml()));
 
     // Test token replacement.
     $xpath = '//div[@class = "tt-token-replace" and text() = "Site name: Drupal"]';
@@ -214,7 +214,7 @@ class TwigTweakTest extends BrowserTestBase {
 
     // Test text format.
     $xpath = '//div[@class = "tt-check-markup"]';
-    $this->assertEquals('<b>bold</b> strong', trim($this->xpath($xpath)[0]->getHtml()));
+    self::assertEquals('<b>bold</b> strong', trim($this->xpath($xpath)[0]->getHtml()));
 
     // Test node view.
     $xpath = '//div[@class = "tt-node-view"]/article[contains(@class, "node--view-mode-default")]/h2[a/span[text() = "Beta"]]';
