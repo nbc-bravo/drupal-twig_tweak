@@ -3,11 +3,15 @@
 namespace Drupal\twig_tweak;
 
 use Drupal\Component\Uuid\Uuid;
+use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Block\TitleBlockPluginInterface;
+use Drupal\Core\Cache\CacheableMetadata;
 use Drupal\Core\Entity\EntityInterface;
 use Drupal\Core\Field\FieldItemInterface;
 use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Link;
+use Drupal\Core\Plugin\ContextAwarePluginInterface;
+use Drupal\Core\Render\Element;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\image\Entity\ImageStyle;
@@ -74,23 +78,70 @@ class TwigExtension extends \Twig_Extension {
   }
 
   /**
-   * Builds the render array for the provided block plugin.
+   * Builds the render array for a block.
    *
    * @param mixed $id
-   *   The ID of block plugin to render.
+   *   The string of block plugin to render.
    * @param array $configuration
    *   (Optional) Pass on any configuration to the plugin block.
+   * @param bool $wrapper
+   *   (Optional) Whether or not use block template for rendering.
    *
    * @return null|array
-   *   A render array for the block or NULL if the block does not exist.
+   *   A render array for the block or NULL if the block cannot be rendered.
    */
-  public function drupalBlock($id, array $configuration = []) {
+  public function drupalBlock($id, array $configuration = [], $wrapper = TRUE) {
+
+    $configuration += ['label_display' => BlockPluginInterface::BLOCK_LABEL_VISIBLE];
+
     /** @var \Drupal\Core\Block\BlockPluginInterface $block_plugin */
     $block_plugin = \Drupal::service('plugin.manager.block')
       ->createInstance($id, $configuration);
-    if ($block_plugin->access(\Drupal::currentUser())) {
-      return $block_plugin->build();
+
+    // Inject runtime contexts.
+    if ($block_plugin instanceof ContextAwarePluginInterface) {
+      $contexts = \Drupal::service('context.repository')->getRuntimeContexts($block_plugin->getContextMapping());
+      \Drupal::service('context.handler')->applyContextMapping($block_plugin, $contexts);
     }
+
+    if (!$block_plugin->access(\Drupal::currentUser())) {
+      return;
+    }
+
+    $content = $block_plugin->build();
+
+    if ($content && !Element::isEmpty($content)) {
+      if ($wrapper) {
+        $build = [
+          '#theme' => 'block',
+          '#attributes' => [],
+          '#contextual_links' => [],
+          '#configuration' => $block_plugin->getConfiguration(),
+          '#plugin_id' => $block_plugin->getPluginId(),
+          '#base_plugin_id' => $block_plugin->getBaseId(),
+          '#derivative_plugin_id' => $block_plugin->getDerivativeId(),
+          'content' => $content,
+        ];
+      }
+      else {
+        $build = $content;
+      }
+    }
+    else {
+      // Preserve cache metadata of empty blocks.
+      $build = [
+        '#markup' => '',
+        '#cache' => $content['#cache'],
+      ];
+    }
+
+    if (!empty($content)) {
+      CacheableMetadata::createFromRenderArray($build)
+        ->merge(CacheableMetadata::createFromRenderArray($content))
+        ->applyTo($build);
+    }
+
+    return $build;
   }
 
   /**

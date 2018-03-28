@@ -88,9 +88,17 @@ class TwigTweakTest extends BrowserTestBase {
     $xpath = '//div[@class = "tt-view-result" and text() = 3]';
     $this->assertByXpath($xpath);
 
-    // Test block plugin.
+    // Test block.
     $xpath = '//div[@class = "tt-block"]';
     $xpath .= '/img[contains(@src, "/core/themes/classy/logo.svg") and @alt="Home"]';
+    $this->assertByXpath($xpath);
+
+    // Test block with wrapper.
+    $xpath = '//div[@class = "tt-block-with-wrapper"]';
+    $xpath .= '/div[@class = "block block-system block-system-branding-block"]';
+    $xpath .= '/h2[text() = "Branding"]';
+    $xpath .= '/following-sibling::a[img[contains(@src, "/core/themes/classy/logo.svg") and @alt="Home"]]';
+    $xpath .= '/following-sibling::div[@class = "site-name"]/a';
     $this->assertByXpath($xpath);
 
     // Test region.
