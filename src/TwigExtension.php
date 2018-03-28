@@ -42,9 +42,6 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_config', [$this, 'drupalConfig']),
       new \Twig_SimpleFunction('drupal_dump', [$this, 'drupalDump']),
       new \Twig_SimpleFunction('dd', [$this, 'drupalDump']),
-      // Wrap drupal_set_message() because it returns some value which is not
-      // suitable for Twig template.
-      new \Twig_SimpleFunction('drupal_set_message', [$this, 'drupalSetMessage']),
       new \Twig_SimpleFunction('drupal_title', [$this, 'drupalTitle']),
       new \Twig_SimpleFunction('drupal_url', [$this, 'drupalUrl']),
       new \Twig_SimpleFunction('drupal_link', [$this, 'drupalLink']),
@@ -443,28 +440,6 @@ class TwigExtension extends \Twig_Extension {
    */
   public function dd($var) {
     $this->drupalDump($var);
-  }
-
-  /**
-   * Sets a message to display to the user.
-   *
-   * @param string|\Drupal\Component\Render\MarkupInterface $message
-   *   (optional) The translated message to be displayed to the user.
-   * @param string $type
-   *   (optional) The message's type. Defaults to 'status'.
-   * @param bool $repeat
-   *   (optional) If this is FALSE and the message is already set, then the
-   *   message will not be repeated. Defaults to FALSE.
-   *
-   * @return array
-   *   A render array to disable caching.
-   *
-   * @see drupal_set_message()
-   */
-  public function drupalSetMessage($message = NULL, $type = 'status', $repeat = FALSE) {
-    drupal_set_message($message, $type, $repeat);
-    $build['#cache']['max-age'] = 0;
-    return $build;
   }
 
   /**

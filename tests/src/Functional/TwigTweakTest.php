@@ -104,7 +104,6 @@ class TwigTweakTest extends BrowserTestBase {
     // Test region.
     $xpath = '//div[@class = "tt-region"]/div[@class = "region region-sidebar-first"]';
     $xpath .= '/div[contains(@class, "block-page-title-block") and h1[@class="page-title" and text() = "Log in"]]';
-    $xpath .= '/following-sibling::div[@class="messages messages--warning" and contains(., "Hi!")]';
     $xpath .= '/following-sibling::div[contains(@class, "block-system-powered-by-block")]/span[. = "Powered by Drupal"]';
     $this->assertByXpath($xpath);
 
@@ -179,10 +178,6 @@ class TwigTweakTest extends BrowserTestBase {
 
     // Test config.
     $xpath = '//div[@class = "tt-config" and text() = "Anonymous"]';
-    $this->assertByXpath($xpath);
-
-    // Test status message.
-    $xpath = '//div[@class = "messages messages--warning" and contains(., "Hi!")]';
     $this->assertByXpath($xpath);
 
     // Test page title.
