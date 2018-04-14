@@ -45,6 +45,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_title', [$this, 'drupalTitle']),
       new \Twig_SimpleFunction('drupal_url', [$this, 'drupalUrl']),
       new \Twig_SimpleFunction('drupal_link', [$this, 'drupalLink']),
+      new \Twig_SimpleFunction('drupal_messages', [$this, 'drupalMessages']),
     ];
   }
 
@@ -505,6 +506,13 @@ class TwigExtension extends \Twig_Extension {
     if ($url) {
       return Link::fromTextAndUrl($text, $url);
     }
+  }
+
+  /**
+   * Displays status messages.
+   */
+  public function drupalMessages() {
+    return ['#type' => 'status_messages'];
   }
 
   /**

@@ -43,6 +43,7 @@
   <div class="tt-title">{{ drupal_title() }}</div>
   <div class="tt-url">{{ drupal_url('node/1', {absolute: true}) }}</div>
   <div class="tt-link">{{ drupal_link('Edit', 'node/1/edit', {absolute: true}) }}</div>
+  <div class="tt-messages">{{ drupal_messages() }}</div>
   <div class="tt-link-access">{{ drupal_link('Edit', 'node/1/edit', {absolute: true}, true) }}</div>
   <div class="tt-token-replace">{{ 'Site name: [site:name]' | token_replace }}</div>
   <div class="tt-preg-replace">{{ 'FOO' | preg_replace('/(foo)/i', '$1-bar') }}</div>
