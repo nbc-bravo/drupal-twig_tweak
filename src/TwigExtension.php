@@ -63,6 +63,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFilter('check_markup', [$this, 'checkMarkup']),
       new \Twig_SimpleFilter('truncate', [$this, 'truncate']),
       new \Twig_SimpleFilter('view', [$this, 'view']),
+      new \Twig_SimpleFilter('with', [$this, 'with']),
     ];
     // PHP filter should be enabled in settings.php file.
     if (Settings::get('twig_tweak_enable_php_filter')) {
@@ -645,6 +646,24 @@ class TwigExtension extends \Twig_Extension {
    */
   public function truncate($string, $max_length, $wordsafe = FALSE, $add_ellipsis = FALSE, $min_wordsafe_length = 1) {
     return Unicode::truncate($string, $max_length, $wordsafe, $add_ellipsis, $min_wordsafe_length);
+  }
+
+  /**
+   * Adds new element to the array.
+   *
+   * @param array $build
+   *   The renderable array to add the child item.
+   * @param int|string $key
+   *   The key of the new element.
+   * @param mixed $element
+   *   The element to add.
+   *
+   * @return array
+   *   The modified array.
+   */
+  public function with(array $build, $key, $element) {
+    $build[$key] = $element;
+    return $build;
   }
 
   /**
