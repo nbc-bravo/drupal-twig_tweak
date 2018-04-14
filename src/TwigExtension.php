@@ -2,6 +2,7 @@
 
 namespace Drupal\twig_tweak;
 
+use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Uuid\Uuid;
 use Drupal\Core\Block\BlockPluginInterface;
 use Drupal\Core\Block\TitleBlockPluginInterface;
@@ -60,6 +61,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFilter('image_style', [$this, 'imageStyle']),
       new \Twig_SimpleFilter('transliterate', [$this, 'transliterate']),
       new \Twig_SimpleFilter('check_markup', [$this, 'checkMarkup']),
+      new \Twig_SimpleFilter('truncate', [$this, 'truncate']),
       new \Twig_SimpleFilter('view', [$this, 'view']),
     ];
     // PHP filter should be enabled in settings.php file.
@@ -619,6 +621,30 @@ class TwigExtension extends \Twig_Extension {
    */
   public function checkMarkup($text, $format_id = NULL, $langcode = '', array $filter_types_to_skip = []) {
     return check_markup($text, $format_id, $langcode, $filter_types_to_skip);
+  }
+
+  /**
+   * Truncates a UTF-8-encoded string safely to a number of characters.
+   *
+   * @param string $string
+   *   The string to truncate.
+   * @param int $max_length
+   *   An upper limit on the returned string length, including trailing ellipsis
+   *   if $add_ellipsis is TRUE.
+   * @param bool $wordsafe
+   *   (Optional) If TRUE, attempt to truncate on a word boundary.
+   * @param bool $add_ellipsis
+   *   (Optional) If TRUE, add '...' to the end of the truncated string.
+   * @param int $min_wordsafe_length
+   *   (Optional) If TRUE, the minimum acceptable length for truncation.
+   *
+   * @return string
+   *   The truncated string.
+   *
+   * @see Unicode::truncate()
+   */
+  public function truncate($string, $max_length, $wordsafe = FALSE, $add_ellipsis = FALSE, $min_wordsafe_length = 1) {
+    return Unicode::truncate($string, $max_length, $wordsafe, $add_ellipsis, $min_wordsafe_length);
   }
 
   /**

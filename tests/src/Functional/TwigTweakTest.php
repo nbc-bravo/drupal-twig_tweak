@@ -227,6 +227,10 @@ class TwigTweakTest extends BrowserTestBase {
     $xpath = '//div[@class = "tt-check-markup"]';
     self::assertEquals('<b>bold</b> strong', trim($this->xpath($xpath)[0]->getHtml()));
 
+    // Test truncation.
+    $xpath = '//div[@class = "tt-truncate" and text() = "Hello…"]';
+    $this->assertByXpath($xpath);
+
     // Test node view.
     $xpath = '//div[@class = "tt-node-view"]/article[contains(@class, "node--view-mode-default")]/h2[a/span[text() = "Beta"]]';
     $xpath .= '/following-sibling::footer[//h4[text() = "Member for"]]';
