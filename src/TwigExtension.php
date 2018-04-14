@@ -642,7 +642,7 @@ class TwigExtension extends \Twig_Extension {
    * @return string
    *   The truncated string.
    *
-   * @see Unicode::truncate()
+   * @see \Drupal\Component\Utility\Unicode::truncate()
    */
   public function truncate($string, $max_length, $wordsafe = FALSE, $add_ellipsis = FALSE, $min_wordsafe_length = 1) {
     return Unicode::truncate($string, $max_length, $wordsafe, $add_ellipsis, $min_wordsafe_length);
