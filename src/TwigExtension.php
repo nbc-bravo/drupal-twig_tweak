@@ -46,6 +46,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_url', [$this, 'drupalUrl']),
       new \Twig_SimpleFunction('drupal_link', [$this, 'drupalLink']),
       new \Twig_SimpleFunction('drupal_messages', [$this, 'drupalMessages']),
+      new \Twig_SimpleFunction('drupal_breadcrumb', [$this, 'drupalBreadcrumb']),
     ];
   }
 
@@ -513,6 +514,15 @@ class TwigExtension extends \Twig_Extension {
    */
   public function drupalMessages() {
     return ['#type' => 'status_messages'];
+  }
+
+  /**
+   * Builds the breadcrumb.
+   */
+  public function drupalBreadcrumb() {
+    return \Drupal::service('breadcrumb')
+      ->build(\Drupal::routeMatch())
+      ->toRenderable();
   }
 
   /**

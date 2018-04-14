@@ -199,6 +199,10 @@ class TwigTweakTest extends BrowserTestBase {
     $xpath = '//div[@class = "tt-messages"]/div[contains(@class, "messages--status") and contains(., "Hello world!")]';
     $this->assertByXpath($xpath);
 
+    // Test breadcrumb.
+    $xpath = '//div[@class = "tt-breadcrumb"]/nav[@class = "breadcrumb"]/ol/li/a[text() = "Home"]';
+    $this->assertByXpath($xpath);
+
     // Test protected link.
     $xpath = '//div[@class = "tt-link-access"]';
     self::assertEquals('', trim($this->xpath($xpath)[0]->getHtml()));
