@@ -30,7 +30,7 @@ class TwigExtension extends \Twig_Extension {
    */
   public function getFunctions() {
     $all_options = ['needs_environment' => TRUE, 'needs_context' => TRUE];
-    $context_options = ['needs_environment' => TRUE];
+    $context_options = ['needs_context' => TRUE];
     return [
       new \Twig_SimpleFunction('drupal_view', 'views_embed_view'),
       new \Twig_SimpleFunction('drupal_view_result', 'views_get_view_result'),
