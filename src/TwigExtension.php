@@ -29,6 +29,7 @@ class TwigExtension extends \Twig_Extension {
    * {@inheritdoc}
    */
   public function getFunctions() {
+    $options = ['needs_environment' => TRUE, 'needs_context' => TRUE];
     return [
       new \Twig_SimpleFunction('drupal_view', 'views_embed_view'),
       new \Twig_SimpleFunction('drupal_view_result', 'views_get_view_result'),
@@ -48,6 +49,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_link', [$this, 'drupalLink']),
       new \Twig_SimpleFunction('drupal_messages', [$this, 'drupalMessages']),
       new \Twig_SimpleFunction('drupal_breadcrumb', [$this, 'drupalBreadcrumb']),
+      new \Twig_SimpleFunction('drupal_breakpoint', [$this, 'drupalBreakpoint'], $options),
     ];
   }
 
@@ -526,6 +528,23 @@ class TwigExtension extends \Twig_Extension {
     return \Drupal::service('breadcrumb')
       ->build(\Drupal::routeMatch())
       ->toRenderable();
+  }
+
+  /**
+   * Emits a breakpoint to the debug client.
+   *
+   * @param \Twig_Environment $environment
+   *   The Twig environment instance.
+   * @param array $context
+   *   Variables from the Twig template.
+   */
+  public function drupalBreakpoint(\Twig_Environment $environment, array $context) {
+    if (function_exists('xdebug_break')) {
+      xdebug_break();
+    }
+    else {
+      trigger_error('Could not make a break because xdebug is not available.', E_USER_WARNING);
+    }
   }
 
   /**
