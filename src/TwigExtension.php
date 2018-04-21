@@ -29,7 +29,8 @@ class TwigExtension extends \Twig_Extension {
    * {@inheritdoc}
    */
   public function getFunctions() {
-    $options = ['needs_environment' => TRUE, 'needs_context' => TRUE];
+    $all_options = ['needs_environment' => TRUE, 'needs_context' => TRUE];
+    $context_options = ['needs_environment' => TRUE];
     return [
       new \Twig_SimpleFunction('drupal_view', 'views_embed_view'),
       new \Twig_SimpleFunction('drupal_view_result', 'views_get_view_result'),
@@ -42,14 +43,14 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_image', [$this, 'drupalImage']),
       new \Twig_SimpleFunction('drupal_token', [$this, 'drupalToken']),
       new \Twig_SimpleFunction('drupal_config', [$this, 'drupalConfig']),
-      new \Twig_SimpleFunction('drupal_dump', [$this, 'drupalDump']),
-      new \Twig_SimpleFunction('dd', [$this, 'drupalDump']),
+      new \Twig_SimpleFunction('drupal_dump', [$this, 'drupalDump'], $context_options),
+      new \Twig_SimpleFunction('dd', [$this, 'drupalDump'], $context_options),
       new \Twig_SimpleFunction('drupal_title', [$this, 'drupalTitle']),
       new \Twig_SimpleFunction('drupal_url', [$this, 'drupalUrl']),
       new \Twig_SimpleFunction('drupal_link', [$this, 'drupalLink']),
       new \Twig_SimpleFunction('drupal_messages', [$this, 'drupalMessages']),
       new \Twig_SimpleFunction('drupal_breadcrumb', [$this, 'drupalBreadcrumb']),
-      new \Twig_SimpleFunction('drupal_breakpoint', [$this, 'drupalBreakpoint'], $options),
+      new \Twig_SimpleFunction('drupal_breakpoint', [$this, 'drupalBreakpoint'], $all_options),
     ];
   }
 
@@ -424,29 +425,19 @@ class TwigExtension extends \Twig_Extension {
   /**
    * Dumps information about variables.
    *
-   * @param mixed $var
-   *   The variable to dump.
+   * @param array $context
+   *   Variables from the Twig template.
+   * @param mixed $variable
+   *   (Optional) The variable to dump.
    */
-  public function drupalDump($var) {
+  public function drupalDump(array $context, $variable = NULL) {
     $var_dumper = '\Symfony\Component\VarDumper\VarDumper';
     if (class_exists($var_dumper)) {
-      call_user_func($var_dumper . '::dump', $var);
+      call_user_func($var_dumper . '::dump', isset($variable) ? $variable : $context);
     }
     else {
       trigger_error('Could not dump the variable because symfony/var-dumper component is not installed.', E_USER_WARNING);
     }
-  }
-
-  /**
-   * An alias for self::drupalDump().
-   *
-   * @param mixed $var
-   *   The variable to dump.
-   *
-   * @see \Drupal\twig_tweak\TwigExtension::drupalDump();
-   */
-  public function dd($var) {
-    $this->drupalDump($var);
   }
 
   /**
