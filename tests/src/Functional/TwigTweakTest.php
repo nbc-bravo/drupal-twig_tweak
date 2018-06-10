@@ -7,6 +7,7 @@ use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\responsive_image\Entity\ResponsiveImageStyle;
 use Drupal\Tests\BrowserTestBase;
+use Drupal\user\Entity\Role;
 
 /**
  * A test for Twig extension.
@@ -52,6 +53,9 @@ class TwigTweakTest extends BrowserTestBase {
       'label' => 'Example',
       'breakpoint_group' => 'responsive_image',
     ])->save();
+
+    // This is required for testing entity form.
+    $this->grantPermissions(Role::load(Role::ANONYMOUS_ID), ['edit any page content']);
   }
 
   /**
@@ -126,6 +130,12 @@ class TwigTweakTest extends BrowserTestBase {
     $xpath = '//div[@class = "tt-entity-from-url"]';
     $xpath .= '/article[contains(@class, "node")]';
     $xpath .= '/h2/a/span[text() = "Beta"]';
+    $this->assertByXpath($xpath);
+
+    // Test entity form.
+    $xpath = '//div[@class = "tt-entity-form"]/form';
+    $xpath .= '//input[@name = "title[0][value]" and @value = "Alpha"]';
+    $xpath .= '/../../../div/input[@type = "submit" and @value = "Save"]';
     $this->assertByXpath($xpath);
 
     // Test field.

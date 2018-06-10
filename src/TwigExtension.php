@@ -37,6 +37,7 @@ class TwigExtension extends \Twig_Extension {
       new \Twig_SimpleFunction('drupal_block', [$this, 'drupalBlock']),
       new \Twig_SimpleFunction('drupal_region', [$this, 'drupalRegion']),
       new \Twig_SimpleFunction('drupal_entity', [$this, 'drupalEntity']),
+      new \Twig_SimpleFunction('drupal_entity_form', [$this, 'drupalEntityForm']),
       new \Twig_SimpleFunction('drupal_field', [$this, 'drupalField']),
       new \Twig_SimpleFunction('drupal_menu', [$this, 'drupalMenu']),
       new \Twig_SimpleFunction('drupal_form', [$this, 'drupalForm']),
@@ -220,6 +221,30 @@ class TwigExtension extends \Twig_Extension {
     if ($entity && (!$check_access || $entity->access('view'))) {
       $render_controller = $entity_type_manager->getViewBuilder($entity_type);
       return $render_controller->view($entity, $view_mode, $langcode);
+    }
+  }
+
+  /**
+   * Gets the built and processed entity form for the given entity.
+   *
+   * @param string $entity_type
+   *   The entity type.
+   * @param mixed $id
+   *   The ID of the entity to build.
+   * @param string $operation
+   *   (optional) The operation identifying the form variation to be returned.
+   * @param bool $check_access
+   *   (Optional) Indicates that access check is required.
+   *
+   * @return array
+   *   The processed form for the given entity and operation.
+   */
+  public function drupalEntityForm($entity_type, $id = NULL, $operation = 'default', $check_access = TRUE) {
+    $entity = $id
+      ? \Drupal::entityTypeManager()->getStorage($entity_type)->load($id)
+      : \Drupal::routeMatch()->getParameter($entity_type);
+    if ($entity && (!$check_access || $entity->access('update'))) {
+      return \Drupal::service('entity.form_builder')->getForm($entity, $operation);
     }
   }
 
