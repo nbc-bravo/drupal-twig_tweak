@@ -54,8 +54,6 @@ class TwigTweakTest extends BrowserTestBase {
       'breakpoint_group' => 'responsive_image',
     ])->save();
 
-    // This is required for testing entity form.
-    $this->grantPermissions(Role::load(Role::ANONYMOUS_ID), ['edit any page content']);
   }
 
   /**
@@ -132,8 +130,27 @@ class TwigTweakTest extends BrowserTestBase {
     $xpath .= '/h2/a/span[text() = "Beta"]';
     $this->assertByXpath($xpath);
 
-    // Test entity form.
-    $xpath = '//div[@class = "tt-entity-form"]/form';
+    // Test access to entity add form.
+    $xpath = '//div[@class = "tt-entity-add-form"]/form';
+    $this->assertSession()->elementNotExists('xpath', $xpath);
+
+    // Test access to entity edit form.
+    $xpath = '//div[@class = "tt-entity-edit-form"]/form';
+    $this->assertSession()->elementNotExists('xpath', $xpath);
+
+    // Grant require permissions and test the forms again.
+    $permissions = ['create page content', 'edit any page content'];
+    $this->grantPermissions(Role::load(Role::ANONYMOUS_ID), $permissions);
+    $this->drupalGet('/node/2');
+
+    // Test entity add form.
+    $xpath = '//div[@class = "tt-entity-add-form"]/form';
+    $xpath .= '//input[@name = "title[0][value]" and @value = ""]';
+    $xpath .= '/../../../div/input[@type = "submit" and @value = "Save"]';
+    $this->assertByXpath($xpath);
+
+    // Test entity edit form.
+    $xpath = '//div[@class = "tt-entity-edit-form"]/form';
     $xpath .= '//input[@name = "title[0][value]" and @value = "Alpha"]';
     $xpath .= '/../../../div/input[@type = "submit" and @value = "Save"]';
     $this->assertByXpath($xpath);
@@ -265,6 +282,17 @@ class TwigTweakTest extends BrowserTestBase {
    */
   public function assertByXpath($xpath) {
     $this->assertSession()->elementExists('xpath', $xpath);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  protected function initFrontPage() {
+    // Intentionally empty. The parent implementation does a request to the
+    // front page to init cookie. This causes some troubles in rendering
+    // attached Twig template because page content type is not created at that
+    // moment. We can skip this step since this test does not rely on any
+    // session data.
   }
 
 }

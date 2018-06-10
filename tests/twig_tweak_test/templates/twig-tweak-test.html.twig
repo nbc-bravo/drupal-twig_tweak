@@ -27,7 +27,8 @@
   <div class="tt-entity-default">{{ drupal_entity('node', 1) }}</div>
   <div class="tt-entity-teaser">{{ drupal_entity('node', 1, 'teaser') }}</div>
   <div class="tt-entity-from-url">{{ drupal_entity('node') }}</div>
-  <div class="tt-entity-form">{{ drupal_entity_form('node', 1) }}</div>
+  <div class="tt-entity-add-form">{{ drupal_entity_form('node', values={type: 'page'}) }}</div>
+  <div class="tt-entity-edit-form">{{ drupal_entity_form('node', 1) }}</div>
   <div class="tt-field">{{ drupal_field('body', 'node', 1) }}</div>
   <div class="tt-menu-default">{{ drupal_menu('twig-tweak-test') }}</div>
   <div class="tt-menu-level">{{ drupal_menu('twig-tweak-test', 2) }}</div>

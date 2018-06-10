@@ -225,26 +225,35 @@ class TwigExtension extends \Twig_Extension {
   }
 
   /**
-   * Gets the built and processed entity form for the given entity.
+   * Gets the built and processed entity form for the given entity type.
    *
    * @param string $entity_type
    *   The entity type.
    * @param mixed $id
-   *   The ID of the entity to build.
-   * @param string $operation
-   *   (optional) The operation identifying the form variation to be returned.
+   *   (optional) The ID of the entity to build. If empty then new entity will
+   *   be created.
+   * @param string $form_mode
+   *   (optional) The mode identifying the form variation to be returned.
+   * @param array $values
+   *   (optional) An array of values to set, keyed by property name.
    * @param bool $check_access
    *   (Optional) Indicates that access check is required.
    *
    * @return array
-   *   The processed form for the given entity and operation.
+   *   The processed form for the given entity type and form mode.
    */
-  public function drupalEntityForm($entity_type, $id = NULL, $operation = 'default', $check_access = TRUE) {
-    $entity = $id
-      ? \Drupal::entityTypeManager()->getStorage($entity_type)->load($id)
-      : \Drupal::routeMatch()->getParameter($entity_type);
-    if ($entity && (!$check_access || $entity->access('update'))) {
-      return \Drupal::service('entity.form_builder')->getForm($entity, $operation);
+  public function drupalEntityForm($entity_type, $id = NULL, $form_mode = 'default', array $values = [], $check_access = TRUE) {
+    $entity_storage = \Drupal::entityTypeManager()->getStorage($entity_type);
+    if ($id) {
+      $entity = $entity_storage->load($id);
+      $operation = 'update';
+    }
+    else {
+      $entity = $entity_storage->create($values);
+      $operation = 'create';
+    }
+    if ($entity && (!$check_access || $entity->access($operation))) {
+      return \Drupal::service('entity.form_builder')->getForm($entity, $form_mode);
     }
   }
 
