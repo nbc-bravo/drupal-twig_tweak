@@ -433,7 +433,7 @@ class TwigExtension extends \Twig_Extension {
   public function drupalDump(array $context, $variable = NULL) {
     $var_dumper = '\Symfony\Component\VarDumper\VarDumper';
     if (class_exists($var_dumper)) {
-      call_user_func($var_dumper . '::dump', isset($variable) ? $variable : $context);
+      call_user_func($var_dumper . '::dump', func_num_args() == 1 ? $context : $variable);
     }
     else {
       trigger_error('Could not dump the variable because symfony/var-dumper component is not installed.', E_USER_WARNING);
