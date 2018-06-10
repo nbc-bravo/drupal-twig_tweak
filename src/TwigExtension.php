@@ -137,7 +137,7 @@ class TwigExtension extends \Twig_Extension {
       // Preserve cache metadata of empty blocks.
       $build = [
         '#markup' => '',
-        '#cache' => $content['#cache'],
+        '#cache' => isset($content['#cache']) ? $content['#cache'] : [],
       ];
     }
 
