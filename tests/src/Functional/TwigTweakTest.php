@@ -6,6 +6,7 @@ use Drupal\Core\Link;
 use Drupal\Core\Url;
 use Drupal\file\Entity\File;
 use Drupal\responsive_image\Entity\ResponsiveImageStyle;
+use Drupal\Core\Render\Markup;
 use Drupal\Tests\BrowserTestBase;
 use Drupal\user\Entity\Role;
 
@@ -220,6 +221,13 @@ class TwigTweakTest extends BrowserTestBase {
     $url = Url::fromUserInput('/node/1/edit', ['absolute' => TRUE]);
     $link = Link::fromTextAndUrl('Edit', $url)->toString();
     $xpath = '//div[@class = "tt-link"]';
+    self::assertEquals($link, trim($this->xpath($xpath)[0]->getHtml()));
+
+    // Test link with HTML.
+    $text = Markup::create('<b>Edit</b>');
+    $url = Url::fromUserInput('/node/1/edit', ['absolute' => TRUE]);
+    $link = Link::fromTextAndUrl($text, $url)->toString();
+    $xpath = '//div[@class = "tt-link-html"]';
     self::assertEquals($link, trim($this->xpath($xpath)[0]->getHtml()));
 
     // Test status messages.

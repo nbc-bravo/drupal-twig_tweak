@@ -13,6 +13,7 @@ use Drupal\Core\Field\FieldItemListInterface;
 use Drupal\Core\Link;
 use Drupal\Core\Plugin\ContextAwarePluginInterface;
 use Drupal\Core\Render\Element;
+use Drupal\Core\Render\Markup;
 use Drupal\Core\Site\Settings;
 use Drupal\Core\Url;
 use Drupal\image\Entity\ImageStyle;
@@ -535,6 +536,12 @@ class TwigExtension extends \Twig_Extension {
   public function drupalLink($text, $user_input, array $options = [], $check_access = FALSE) {
     $url = $this->drupalUrl($user_input, $options, $check_access);
     if ($url) {
+      // The text has been processed by twig already, convert it to a safe
+      // object for the render system.
+      // @see \Drupal\Core\Template\TwigExtension::getLink()
+      if ($text instanceof \Twig_Markup) {
+        $text = Markup::create($text);
+      }
       return Link::fromTextAndUrl($text, $url);
     }
   }
