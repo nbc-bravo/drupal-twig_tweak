@@ -735,7 +735,7 @@ class TwigExtension extends \Twig_Extension {
    */
   public function view($object, $display_options = 'default', $langcode = NULL, $check_access = TRUE) {
     if ($object instanceof FieldItemListInterface || $object instanceof FieldItemInterface) {
-      return $object->view($display_options);
+      return !$object->isEmpty() ? $object->view($display_options) : [];
     }
     elseif ($object instanceof EntityInterface && (!$check_access || $object->access('view'))) {
       return \Drupal::entityTypeManager()
